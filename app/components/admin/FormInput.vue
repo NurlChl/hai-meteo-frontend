@@ -13,7 +13,7 @@ interface Props {
   error?: string
   helperText?: string
   rows?: number
-  options?: Array<{ label: string, value: any }>
+  options?: Array<{ label: string, value: string | number }>
 }
 
 const props = withDefaults(defineProps<Props>(), {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FAQ } from '~/types/models'
 import FormInput from '~/components/admin/FormInput.vue'
 
 definePageMeta({
@@ -24,7 +25,7 @@ const loading = ref(false)
 async function loadFAQ() {
   loading.value = true
   try {
-    const response = await get(`/faqs/${route.params.id}`) as any
+    const response = await get(`/faqs/${route.params.id}`) as FAQ
     form.value = {
       question: response.question || '',
       answerMd: response.answerMd || '',

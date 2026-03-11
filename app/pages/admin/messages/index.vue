@@ -30,7 +30,7 @@ interface Message {
   createdAt: string
   company?: string
   message?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 const messages = ref<Message[]>([])
@@ -51,7 +51,7 @@ async function loadMessages() {
       query: {
         limit: pageSize.value,
         offset: (currentPage.value - 1) * pageSize.value,
-
+        search: filter.value || undefined,
       },
     })) as { results: Message[], totalResults: number, limit: number, offset: number }
 
@@ -144,6 +144,7 @@ onMounted(() => {
       :current-page="currentPage"
       :page-size="pageSize"
       :total="total"
+      show-search
       @sort="handleSort"
       @search="handleSearch"
       @prev-page="prevPage"
@@ -154,7 +155,7 @@ onMounted(() => {
         <StatusBadge :status="item.status" type="message" />
       </template>
       <template #cell-createdAt="{ value }">
-        {{ formatDate(value) }}
+        {{ formatDate(value as string) }}
       </template>
       <template #rowActions="{ item }">
         <BaseButton variant="link" @click="viewMessage(item)">

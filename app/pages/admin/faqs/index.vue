@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FAQ } from '~/types/models'
 import DataTable from '~/components/admin/DataTable.vue'
 import Modal from '~/components/admin/Modal.vue'
 
@@ -16,15 +17,6 @@ const columns = [
   { key: 'isPublished', label: 'Status' },
   { key: 'createdAt', label: 'Created At' },
 ]
-
-interface FAQ {
-  id: number
-  question: string
-  sortOrder: number
-  isPublished: boolean
-  createdAt: string
-  [key: string]: any
-}
 
 const faqs = ref<FAQ[]>([])
 const loading = ref(false)
@@ -45,6 +37,7 @@ async function loadFAQs() {
       query: {
         limit: pageSize.value,
         offset: (currentPage.value - 1) * pageSize.value,
+        search: filter.value || undefined,
       },
     })) as { results: FAQ[], totalResults: number, limit: number, offset: number }
 
@@ -87,7 +80,7 @@ function nextPage() {
   }
 }
 
-function editFAQ(faq: any) {
+function editFAQ(faq: FAQ) {
   navigateTo(`/admin/faqs/${faq.id}`)
 }
 
@@ -136,6 +129,7 @@ onMounted(() => {
       :current-page="currentPage"
       :page-size="pageSize"
       :total="total"
+      show-search
       @sort="handleSort"
       @search="handleSearch"
       @prev-page="prevPage"

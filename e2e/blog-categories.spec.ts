@@ -58,9 +58,6 @@ test.describe('Blog Categories Management', () => {
     await page.locator('button').filter({ hasText: /^Delete$/ }).last().click()
 
     await expect(updatedRow).not.toBeVisible()
-
-
-  await page.waitForTimeout(2000)
   })
 
   test('should search and filter blog categories', async ({ page }) => {

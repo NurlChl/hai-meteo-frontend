@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends Record<string, any>">
+<script setup lang="ts" generic="T extends object">
 import BaseButton from '~/components/base/Button.vue'
 import BaseInput from '~/components/base/Input.vue'
 
@@ -54,11 +54,16 @@ function getItemKey(item: T) {
   return (itemRecord.id as string | number) || JSON.stringify(item)
 }
 
-function getItemValue(item: T, key: string): any {
-  const keys = key.split('.')
-  let value: any = item
-  for (const k of keys) {
-    value = value?.[k]
+function getItemValue(item: T, key: string): unknown {
+  const record = item as Record<string, unknown>
+  let value: unknown = record
+  for (const k of key.split('.')) {
+    if (value && typeof value === 'object') {
+      value = (value as Record<string, unknown>)[k]
+    }
+    else {
+      return undefined
+    }
   }
   return value
 }

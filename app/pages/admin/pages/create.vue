@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { FetchError } from '~/types'
 import FormInput from '~/components/admin/FormInput.vue'
+import FormMediaSelect from '~/components/admin/FormMediaSelect.vue'
 
 definePageMeta({
   layout: 'admin',
@@ -12,6 +14,9 @@ const toast = useToast()
 const form = ref({
   title: '',
   slug: '',
+  metaTitle: '',
+  metaDesc: '',
+  metaImageId: null as number | null,
   isPublished: false,
 })
 
@@ -40,9 +45,10 @@ async function handleSubmit() {
     toast.success('Page created successfully')
     await navigateTo('/admin/pages')
   }
-  catch (error: any) {
-    if (error.data?.message) {
-      toast.error(error.data.message)
+  catch (error: unknown) {
+    const e = error as FetchError
+    if (e.data?.message) {
+      toast.error(e.data.message)
     }
     else {
       toast.error('Failed to create page')
@@ -81,6 +87,33 @@ async function handleSubmit() {
             placeholder="page-slug"
             required
             :error="errors.slug"
+          />
+
+          <FormInput
+            id="metaTitle"
+            v-model="form.metaTitle"
+            label="Meta Title"
+            placeholder="SEO title for search engines"
+            :error="errors.metaTitle"
+          />
+
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-2">
+              Meta Description
+            </label>
+            <textarea
+              id="metaDesc"
+              v-model="form.metaDesc"
+              rows="3"
+              placeholder="SEO description for search engines"
+              class="w-full px-4 py-3 rounded-xl border bg-white/5 border-white/10 hover:border-white/20 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 text-text-primary transition-all duration-300 outline-none"
+            />
+          </div>
+
+          <FormMediaSelect
+            v-model="form.metaImageId"
+            label="Meta Image"
+            placeholder="Select an image for meta tag"
           />
 
           <div class="flex items-center gap-3 px-1">

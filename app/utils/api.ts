@@ -72,4 +72,25 @@ export const api = {
 
   delete: <T>(endpoint: string, options?: ApiRequestOptions) =>
     apiClient<T>(endpoint, { ...options, method: 'DELETE' }),
+
+  upload: async <T>(endpoint: string, formData: FormData): Promise<T> => {
+    const config = useRuntimeConfig()
+    const authToken = useAuthStore().token
+
+    const response = await $fetch<T>(endpoint, {
+      baseURL: config.public.apiBase,
+      method: 'POST',
+      body: formData,
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+      onResponseError({ response }) {
+        if (response.status === 401) {
+          const authStore = useAuthStore()
+          authStore.logout()
+          navigateTo('/admin/login')
+        }
+      },
+    })
+
+    return response
+  },
 }

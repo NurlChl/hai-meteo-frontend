@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormImageUpload from '~/components/admin/FormImageUpload.vue'
 import FormInput from '~/components/admin/FormInput.vue'
 
 definePageMeta({
@@ -13,6 +14,7 @@ const form = ref({
   label: '',
   href: '',
   location: 'header',
+  iconMediaId: null as number | null,
   sortOrder: 0,
   isEnabled: true,
 })
@@ -29,9 +31,10 @@ async function handleSubmit() {
     toast.success('Navigation item created successfully')
     await navigateTo('/admin/navigation')
   }
-  catch (error: any) {
-    if (error.data?.message) {
-      toast.error(error.data.message)
+  catch (error: unknown) {
+    const err = error as { data?: { message?: string } }
+    if (err.data?.message) {
+      toast.error(err.data.message)
     }
     else {
       toast.error('Failed to create navigation item')
@@ -83,6 +86,12 @@ async function handleSubmit() {
               { label: 'Social', value: 'social' },
             ]"
             required
+          />
+
+          <FormImageUpload
+            v-model="form.iconMediaId"
+            label="Icon Image"
+            helper-text="Upload an icon for this navigation item (optional)"
           />
 
           <FormInput

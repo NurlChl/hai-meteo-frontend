@@ -61,6 +61,23 @@ export function useApi() {
   const del = <T>(endpoint: string, options?: ApiRequestOptions) =>
     execute<T>('DELETE', endpoint, undefined, options)
 
+  const upload = async <T>(endpoint: string, formData: FormData): Promise<T> => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await api.upload<T>(endpoint, formData)
+      return response
+    }
+    catch (err) {
+      error.value = err as Error
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     error,
@@ -70,5 +87,6 @@ export function useApi() {
     put,
     patch,
     del,
+    upload,
   }
 }

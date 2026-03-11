@@ -5,5 +5,6 @@
       <NuxtPage />
     </NuxtLayout>
     <Toaster />
+    <AskMeteo />
   </div>
 </template>

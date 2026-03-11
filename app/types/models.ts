@@ -51,12 +51,8 @@ export interface PageSection {
   id: number
   pageId: number
   sectionKey: string
-  sectionType: string
   sortOrder: number
-  title: string | null
-  subtitle: string | null
   content: Record<string, unknown>
-  backgroundMediaId: number | null
   isEnabled: boolean
   createdAt: string
   updatedAt: string
@@ -123,4 +119,13 @@ export interface ContactMessage {
   message: string
   status: ContactMessageStatus
   createdAt: string
+}
+
+export interface ChatQuestion {
+  id: number
+  question: string
+  sortOrder: number
+  isEnabled: boolean
+  createdAt: string
+  updatedAt: string
 }

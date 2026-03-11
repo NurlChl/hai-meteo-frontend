@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Page } from '~/types/models'
 import DataTable from '~/components/admin/DataTable.vue'
 import Modal from '~/components/admin/Modal.vue'
 
@@ -29,14 +30,6 @@ const queryParams = computed(() => ({
   search: filter.value,
 }))
 
-interface Page {
-  id: number
-  title: string
-  slug: string
-  isPublished: boolean
-  [key: string]: any
-}
-
 const { data: pagesData, status, refresh } = await useFetch<{ results: Page[], totalResults: number, limit: number, offset: number }>('/pages', {
   baseURL: config.public.apiBase,
   query: queryParams,
@@ -54,7 +47,7 @@ const loading = computed(() => status.value === 'pending')
 
 const deleting = ref(false)
 const isDeleteModalOpen = ref(false)
-const pageToDelete = ref<any>(null)
+const pageToDelete = ref<Page | null>(null)
 
 function handleSort(key: string) {
   sortKey.value = sortKey.value === key ? '' : key
@@ -79,7 +72,7 @@ function nextPage() {
   }
 }
 
-function confirmDelete(page: any) {
+function confirmDelete(page: Page) {
   pageToDelete.value = page
   isDeleteModalOpen.value = true
 }
@@ -148,7 +141,7 @@ async function handleDelete() {
           <BaseButton
             variant="link"
             class="text-red-500 hover:text-red-600"
-            @click="confirmDelete(item)"
+            @click="confirmDelete(item as Page)"
           >
             Delete
           </BaseButton>

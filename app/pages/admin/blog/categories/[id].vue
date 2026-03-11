@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FetchError } from '~/types'
 import FormInput from '~/components/admin/FormInput.vue'
 
 definePageMeta({
@@ -45,9 +46,10 @@ async function handleSubmit() {
     toast.success('Blog category updated successfully')
     await navigateTo('/admin/blog/categories')
   }
-  catch (error: any) {
-    if (error.data?.message) {
-      toast.error(error.data.message)
+  catch (error: unknown) {
+    const e = error as FetchError
+    if (e.data?.message) {
+      toast.error(e.data.message)
     }
     else {
       toast.error('Failed to update blog category')

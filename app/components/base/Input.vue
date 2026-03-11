@@ -27,7 +27,7 @@ interface Props {
   readonly?: boolean
   required?: boolean
   rows?: number
-  options?: Array<{ label: string, value: any }>
+  options?: Array<{ label: string, value: string | number }>
   error?: string
 }
 

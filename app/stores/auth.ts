@@ -1,4 +1,4 @@
-import type { AdminUser } from '~/types'
+import type { AdminUser, FetchError } from '~/types'
 import { defineStore } from 'pinia'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -7,9 +7,10 @@ export const useAuthStore = defineStore('auth', () => {
     maxAge: 60 * 60 * 24 * 7,
     sameSite: 'lax',
     path: '/',
+    default: () => null,
   })
 
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const isAuthenticated = computed(() => !!token.value)
   const userName = computed(() => user.value?.name || '')
   const userEmail = computed(() => user.value?.email || '')
 
@@ -38,7 +39,8 @@ export const useAuthStore = defineStore('auth', () => {
         })
         setUser(userData)
       }
-      catch (e: any) {
+      catch (error: unknown) {
+        const e = error as FetchError
         console.error('Failed to fetch user profile:', e)
         if (e.response?.status === 401 || e.statusCode === 401) {
           logout()

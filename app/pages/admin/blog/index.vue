@@ -8,10 +8,8 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { del } = useApi()
+const { get, del } = useApi()
 const toast = useToast()
-const config = useRuntimeConfig()
-const authStore = useAuthStore()
 
 const columns = [
   { key: 'title', label: 'Title' },
@@ -19,56 +17,65 @@ const columns = [
   { key: 'createdAt', label: 'Created At' },
 ]
 
-const currentPage = ref(1)
-const pageSize = ref(10)
-const sortKey = ref('')
-const filter = ref('')
-
-const queryParams = computed(() => ({
-  limit: pageSize.value,
-  offset: (currentPage.value - 1) * pageSize.value,
-}))
-
 interface BlogPost {
   id: number
   title: string
   status: string
   createdAt: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
-const { data: postsData, status, refresh } = await useFetch<{ results: BlogPost[], totalResults: number, limit: number, offset: number }>('/blog-posts', {
-  baseURL: config.public.apiBase,
-  query: queryParams,
-  onRequest({ options }) {
-    if (authStore.token) {
-      options.headers = new Headers(options.headers)
-      options.headers.set('Authorization', `Bearer ${authStore.token}`)
-    }
-  },
-})
-
-const posts = computed(() => postsData.value?.results || [])
-const total = computed(() => postsData.value?.totalResults || 0)
-const loading = computed(() => status.value === 'pending')
+const posts = ref<BlogPost[]>([])
+const loading = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+const sortKey = ref('')
+const filter = ref('')
 
 const deleting = ref(false)
 const isDeleteModalOpen = ref(false)
-const postToDelete = ref<any>(null)
+const postToDelete = ref<BlogPost | null>(null)
+
+async function loadPosts() {
+  loading.value = true
+  try {
+    const response = (await get('/blog-posts', {
+      query: {
+        limit: pageSize.value,
+        offset: (currentPage.value - 1) * pageSize.value,
+        search: filter.value || undefined,
+      },
+    })) as { results: BlogPost[], totalResults: number }
+
+    posts.value = response.results || []
+    total.value = response.totalResults || 0
+  }
+  catch (err) {
+    console.error(err)
+    toast.error('Failed to load blog posts')
+  }
+  finally {
+    loading.value = false
+  }
+}
 
 function handleSort(key: string) {
   sortKey.value = sortKey.value === key ? '' : key
   currentPage.value = 1
+  loadPosts()
 }
 
 function handleSearch(query: string) {
   filter.value = query
   currentPage.value = 1
+  loadPosts()
 }
 
 function prevPage() {
   if (currentPage.value > 1) {
     currentPage.value--
+    loadPosts()
   }
 }
 
@@ -76,10 +83,11 @@ function nextPage() {
   const totalPages = Math.ceil(total.value / pageSize.value)
   if (currentPage.value < totalPages) {
     currentPage.value++
+    loadPosts()
   }
 }
 
-function confirmDelete(post: any) {
+function confirmDelete(post: BlogPost) {
   postToDelete.value = post
   isDeleteModalOpen.value = true
 }
@@ -98,7 +106,7 @@ async function handleDelete() {
     await del(`/blog-posts/${postToDelete.value.id}`)
     toast.success('Blog post deleted successfully')
     closeDeleteModal()
-    refresh()
+    loadPosts()
   }
   catch (err) {
     console.error(err)
@@ -116,6 +124,10 @@ function formatDate(dateString: string) {
     day: 'numeric',
   })
 }
+
+onMounted(() => {
+  loadPosts()
+})
 </script>
 
 <template>
@@ -133,7 +145,7 @@ function formatDate(dateString: string) {
       @search="handleSearch"
       @prev-page="prevPage"
       @next-page="nextPage"
-      @refresh="refresh"
+      @refresh="loadPosts"
     >
       <template #actions>
         <BaseButton variant="primary" to="/admin/blog/create">
@@ -144,7 +156,7 @@ function formatDate(dateString: string) {
         <StatusBadge :status="item.status" type="blog" />
       </template>
       <template #cell-createdAt="{ value }">
-        {{ formatDate(value) }}
+        {{ formatDate(value as string) }}
       </template>
       <template #rowActions="{ item }">
         <BaseButton

@@ -8,7 +8,7 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { get, post, del } = useApi()
+const { get, del, upload } = useApi()
 const toast = useToast()
 
 const mediaAssets = ref<
@@ -25,19 +25,20 @@ const deleting = ref(false)
 const isDeleteModalOpen = ref(false)
 const mediaToDelete = ref<{ id: number } | null>(null)
 
-const isCreateModalOpen = ref(false)
-const creating = ref(false)
-const createForm = ref({
-  fileUrl: '',
+const isUploadModalOpen = ref(false)
+const uploading = ref(false)
+const uploadForm = ref({
+  file: null as File | null,
   altText: '',
-  mimeType: 'image/jpeg',
-  width: 0,
-  height: 0,
+  width: '',
+  height: '',
 })
 
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+
+const fileInputRef = ref<HTMLInputElement | null>(null)
 
 async function loadMedia() {
   try {
@@ -72,43 +73,72 @@ function handlePageChange(page: number) {
   loadMedia()
 }
 
-function openCreateModal() {
-  createForm.value = {
-    fileUrl: '',
+function openUploadModal() {
+  uploadForm.value = {
+    file: null,
     altText: '',
-    mimeType: 'image/jpeg',
-    width: 800,
-    height: 600,
+    width: '',
+    height: '',
   }
-  isCreateModalOpen.value = true
+  isUploadModalOpen.value = true
 }
 
-function closeCreateModal() {
-  isCreateModalOpen.value = false
+function closeUploadModal() {
+  isUploadModalOpen.value = false
+  uploadForm.value = {
+    file: null,
+    altText: '',
+    width: '',
+    height: '',
+  }
 }
 
-async function handleCreate() {
-  creating.value = true
+function handleFileSelect(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    uploadForm.value.file = target.files[0]
+  }
+}
+
+function triggerFileInput() {
+  fileInputRef.value?.click()
+}
+
+async function handleUpload() {
+  if (!uploadForm.value.file) {
+    toast.error('Please select a file')
+    return
+  }
+
+  uploading.value = true
   try {
-    await post('/media-assets', {
-      ...createForm.value,
-      width: Number(createForm.value.width),
-      height: Number(createForm.value.height),
-    })
-    toast.success('Media asset created successfully')
-    closeCreateModal()
+    const formData = new FormData()
+    formData.append('file', uploadForm.value.file)
+    if (uploadForm.value.altText) {
+      formData.append('altText', uploadForm.value.altText)
+    }
+    if (uploadForm.value.width) {
+      formData.append('width', uploadForm.value.width.toString())
+    }
+    if (uploadForm.value.height) {
+      formData.append('height', uploadForm.value.height.toString())
+    }
+
+    await upload('/media-assets/upload', formData)
+    toast.success('Media uploaded successfully')
+    closeUploadModal()
     await loadMedia()
   }
   catch (err) {
     console.error(err)
-    toast.error('Failed to create media asset')
+    toast.error('Failed to upload media')
   }
   finally {
-    creating.value = false
+    uploading.value = false
   }
 }
 
-function confirmDelete(media: any) {
+function confirmDelete(media: { id: number }) {
   mediaToDelete.value = media
   isDeleteModalOpen.value = true
 }
@@ -147,8 +177,8 @@ onMounted(() => {
   <div>
     <BaseCard title="Media Library">
       <template #actions>
-        <BaseButton variant="primary" @click="openCreateModal">
-          Create Media
+        <BaseButton variant="primary" @click="openUploadModal">
+          Upload Media
         </BaseButton>
       </template>
 
@@ -160,11 +190,11 @@ onMounted(() => {
           class="overflow-hidden shadow-card hover:shadow-glow transition-shadow duration-300"
         >
           <div style="aspect-ratio: 16 / 9" class="bg-bg-surface">
-            <img
+            <NuxtImg
               :src="media.fileUrl"
               :alt="media.altText || 'Media'"
               class="w-full h-48 object-cover"
-            >
+            />
           </div>
           <div class="p-4">
             <p class="text-sm font-medium text-text-primary truncate">
@@ -201,40 +231,67 @@ onMounted(() => {
     </BaseCard>
 
     <Modal
-      v-model:is-open="isCreateModalOpen"
-      title="Create Media Asset"
-      confirm-text="Create"
-      :loading="creating"
-      @confirm="handleCreate"
-      @close="closeCreateModal"
+      v-model:is-open="isUploadModalOpen"
+      title="Upload Media"
+      confirm-text="Upload"
+      :loading="uploading"
+      @confirm="handleUpload"
+      @close="closeUploadModal"
     >
       <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-text-secondary mb-2">
+            File <span class="text-red-500">*</span>
+          </label>
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleFileSelect"
+          >
+          <div
+            class="border-2 border-dashed border-white/20 rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+            @click="triggerFileInput"
+          >
+            <div v-if="uploadForm.file" class="space-y-2">
+              <p class="text-text-primary font-medium">
+                {{ uploadForm.file.name }}
+              </p>
+              <p class="text-text-muted text-sm">
+                {{ (uploadForm.file.size / 1024 / 1024).toFixed(2) }} MB
+              </p>
+            </div>
+            <div v-else class="space-y-2">
+              <svg class="w-12 h-12 mx-auto text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <p class="text-text-muted">
+                Click to select an image
+              </p>
+              <p class="text-text-muted text-xs">
+                PNG, JPG, GIF, WebP, SVG (max 10MB)
+              </p>
+            </div>
+          </div>
+        </div>
         <FormInput
-          v-model="createForm.fileUrl"
-          label="File URL"
-          placeholder="https://example.com/image.jpg"
-          required
-        />
-        <FormInput
-          v-model="createForm.altText"
+          v-model="uploadForm.altText"
           label="Alt Text"
           placeholder="Description of the image"
         />
-        <FormInput
-          v-model="createForm.mimeType"
-          label="MIME Type"
-          placeholder="image/jpeg"
-        />
         <div class="grid grid-cols-2 gap-4">
           <FormInput
-            v-model="createForm.width"
-            label="Width"
+            v-model="uploadForm.width"
             type="number"
+            label="Width"
+            placeholder="Width in pixels"
           />
           <FormInput
-            v-model="createForm.height"
-            label="Height"
+            v-model="uploadForm.height"
             type="number"
+            label="Height"
+            placeholder="Height in pixels"
           />
         </div>
       </div>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormImageUpload from '~/components/admin/FormImageUpload.vue'
 import FormInput from '~/components/admin/FormInput.vue'
 
 definePageMeta({
@@ -14,6 +15,7 @@ const form = ref({
   label: '',
   href: '',
   location: 'header',
+  iconMediaId: null as number | null,
   sortOrder: 0,
   isEnabled: true,
 })
@@ -27,6 +29,7 @@ async function loadNavItem() {
       label?: string
       href?: string
       location?: string
+      iconMediaId?: number | null
       sortOrder?: number
       isEnabled?: boolean
     }
@@ -34,6 +37,7 @@ async function loadNavItem() {
       label: response.label || '',
       href: response.href || '',
       location: response.location || 'header',
+      iconMediaId: response.iconMediaId || null,
       sortOrder: response.sortOrder || 0,
       isEnabled: typeof response.isEnabled === 'boolean' ? response.isEnabled : true,
     }
@@ -54,9 +58,10 @@ async function handleSubmit() {
     toast.success('Navigation item updated successfully')
     await navigateTo('/admin/navigation')
   }
-  catch (error: any) {
-    if (error.data?.message) {
-      toast.error(error.data.message)
+  catch (error: unknown) {
+    const err = error as { data?: { message?: string } }
+    if (err.data?.message) {
+      toast.error(err.data.message)
     }
     else {
       toast.error('Failed to update navigation item')
@@ -112,6 +117,12 @@ onMounted(() => {
               { label: 'Social', value: 'social' },
             ]"
             required
+          />
+
+          <FormImageUpload
+            v-model="form.iconMediaId"
+            label="Icon Image"
+            helper-text="Upload an icon for this navigation item (optional)"
           />
 
           <FormInput

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { NavigationItem } from '~/types/models'
 import DataTable from '~/components/admin/DataTable.vue'
 import Modal from '~/components/admin/Modal.vue'
 
@@ -31,14 +32,7 @@ const queryParams = computed(() => ({
   search: filter.value,
 }))
 
-interface NavItem {
-  id: number
-  label: string
-  href: string
-  location: string
-  sortOrder: number
-  isEnabled: boolean
-  [key: string]: any
+interface NavItem extends NavigationItem {
 }
 
 const { data: navData, status, refresh } = await useFetch<{ results: NavItem[], totalResults: number, limit: number, offset: number }>('/navigation-items', {
@@ -58,7 +52,7 @@ const loading = computed(() => status.value === 'pending')
 
 const deleting = ref(false)
 const isDeleteModalOpen = ref(false)
-const itemToDelete = ref<any>(null)
+const itemToDelete = ref<NavigationItem | null>(null)
 
 function handleSort(key: string) {
   sortKey.value = sortKey.value === key ? '' : key
@@ -83,7 +77,7 @@ function nextPage() {
   }
 }
 
-function confirmDelete(item: any) {
+function confirmDelete(item: NavigationItem) {
   itemToDelete.value = item
   isDeleteModalOpen.value = true
 }
@@ -152,7 +146,7 @@ async function handleDelete() {
           <BaseButton
             variant="link"
             class="text-red-500 hover:text-red-600"
-            @click="confirmDelete(item)"
+            @click="confirmDelete(item as NavigationItem)"
           >
             Delete
           </BaseButton>

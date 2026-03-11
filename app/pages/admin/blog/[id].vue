@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import FormCheckboxGroup from '~/components/admin/FormCheckboxGroup.vue'
 import FormInput from '~/components/admin/FormInput.vue'
+import FormMediaSelect from '~/components/admin/FormMediaSelect.vue'
+import FormWysiwyg from '~/components/admin/FormWysiwyg.vue'
 
 definePageMeta({
   layout: 'admin',
@@ -21,22 +24,52 @@ const form = ref({
   status: 'draft',
   publishedAt: '',
   coverMediaId: null as number | null,
-})
-
-const coverMediaIdInput = computed({
-  get: () => (form.value.coverMediaId ?? '') as string | number,
-  set: (value) => {
-    if (value === '' || value === null || value === undefined) {
-      form.value.coverMediaId = null
-      return
-    }
-    const parsed = Number(value)
-    form.value.coverMediaId = Number.isNaN(parsed) ? null : parsed
-  },
+  categoryIds: [] as number[],
+  tagIds: [] as number[],
 })
 
 const errors = ref<Record<string, string>>({})
 const submitting = ref(false)
+
+const categories = ref<Array<{ id: number, name: string }>>([])
+const tags = ref<Array<{ id: number, name: string }>>([])
+
+watch(() => form.value.title, (newTitle) => {
+  if (newTitle && !isEdit.value) {
+    form.value.slug = newTitle
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+  }
+  else if (!newTitle && !isEdit.value) {
+    form.value.slug = ''
+  }
+})
+
+async function loadCategories() {
+  try {
+    const response = (await get('/blog-categories', {
+      query: { limit: 100, offset: 0 },
+    })) as { results: Array<{ id: number, name: string }> }
+    categories.value = response.results || []
+  }
+  catch (err) {
+    console.error('Failed to load categories:', err)
+  }
+}
+
+async function loadTags() {
+  try {
+    const response = (await get('/blog-tags', {
+      query: { limit: 100, offset: 0 },
+    })) as { results: Array<{ id: number, name: string }> }
+    tags.value = response.results || []
+  }
+  catch (err) {
+    console.error('Failed to load tags:', err)
+  }
+}
 
 async function loadPost() {
   try {
@@ -49,6 +82,8 @@ async function loadPost() {
       status?: string
       publishedAt?: string
       coverMediaId?: number | null
+      categoryIds?: number[]
+      tagIds?: number[]
     }
     form.value = {
       title: response.title || '',
@@ -61,6 +96,8 @@ async function loadPost() {
         ? new Date(response.publishedAt).toISOString().slice(0, 16)
         : '',
       coverMediaId: response.coverMediaId || null,
+      categoryIds: response.categoryIds || [],
+      tagIds: response.tagIds || [],
     }
   }
   catch (err) {
@@ -77,8 +114,10 @@ async function handleSubmit() {
   try {
     const payload = {
       ...form.value,
-      coverMediaId: form.value.coverMediaId ? Number(form.value.coverMediaId) : null,
+      coverMediaId: form.value.coverMediaId,
       publishedAt: form.value.publishedAt ? new Date(form.value.publishedAt).toISOString() : null,
+      categoryIds: form.value.categoryIds,
+      tagIds: form.value.tagIds,
     }
 
     if (isEdit.value) {
@@ -101,6 +140,8 @@ async function handleSubmit() {
 }
 
 onMounted(() => {
+  loadCategories()
+  loadTags()
   if (isEdit.value) {
     loadPost()
   }
@@ -144,14 +185,12 @@ onMounted(() => {
           placeholder="Brief description of the post"
         />
 
-        <FormInput
-          id="content"
+        <FormWysiwyg
           v-model="form.contentMd"
-          label="Content (Markdown)"
-          type="textarea"
-          :rows="15"
+          label="Content"
           required
-          placeholder="Write your post content in Markdown format..."
+          placeholder="Write your post content..."
+          :error="errors.contentMd"
         />
 
         <FormInput
@@ -180,12 +219,24 @@ onMounted(() => {
           type="datetime-local"
         />
 
-        <FormInput
-          id="coverMediaId"
-          v-model="coverMediaIdInput"
-          label="Cover Image ID"
-          type="number"
-          placeholder="Enter media asset ID"
+        <FormMediaSelect
+          v-model="form.coverMediaId"
+          label="Cover Image"
+          helper-text="Select a media asset for the blog post cover"
+        />
+
+        <FormCheckboxGroup
+          v-model="form.categoryIds"
+          label="Categories"
+          :options="categories"
+          empty-text="No categories available"
+        />
+
+        <FormCheckboxGroup
+          v-model="form.tagIds"
+          label="Tags"
+          :options="tags"
+          empty-text="No tags available"
         />
 
         <template #footer>

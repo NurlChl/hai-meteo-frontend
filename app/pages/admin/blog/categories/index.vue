@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BlogCategory } from '~/types/models'
 import DataTable from '~/components/admin/DataTable.vue'
 import Modal from '~/components/admin/Modal.vue'
 
@@ -28,13 +29,6 @@ const queryParams = computed(() => ({
   search: filter.value,
 }))
 
-interface BlogCategory {
-  id: number
-  name: string
-  slug: string
-  [key: string]: any
-}
-
 const { data: categoriesData, status, refresh } = await useFetch<{ results: BlogCategory[], totalResults: number, limit: number, offset: number }>('/blog-categories', {
   baseURL: config.public.apiBase,
   query: queryParams,
@@ -52,7 +46,7 @@ const loading = computed(() => status.value === 'pending')
 
 const deleting = ref(false)
 const isDeleteModalOpen = ref(false)
-const categoryToDelete = ref<any>(null)
+const categoryToDelete = ref<BlogCategory | null>(null)
 
 function handleSort(key: string) {
   sortKey.value = sortKey.value === key ? '' : key
@@ -77,7 +71,7 @@ function nextPage() {
   }
 }
 
-function confirmDelete(category: any) {
+function confirmDelete(category: BlogCategory) {
   categoryToDelete.value = category
   isDeleteModalOpen.value = true
 }
@@ -141,7 +135,7 @@ async function handleDelete() {
           <BaseButton
             variant="link"
             class="text-red-500 hover:text-red-600"
-            @click="confirmDelete(item)"
+            @click="confirmDelete(item as BlogCategory)"
           >
             Delete
           </BaseButton>

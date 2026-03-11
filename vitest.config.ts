@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'node:url'
+import { defineVitestConfig } from '@nuxt/test-utils/config'
 import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vitest/config'
 
-export default defineConfig({
+export default defineVitestConfig({
   plugins: [vue()],
   test: {
     include: ['app/**/*.test.ts', 'app/**/*.spec.ts'],
@@ -20,12 +20,6 @@ export default defineConfig({
         '**/types/**',
         'app/tests/**',
       ],
-    },
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
     },
   },
   resolve: {
