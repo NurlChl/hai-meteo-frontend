@@ -62,7 +62,7 @@ const editor = useEditor({
       class: 'prose prose-invert max-w-none min-h-[300px] focus:outline-none p-4',
     },
   },
-  onUpdate: ({ editor }) => {
+  onUpdate: ({ editor }: { editor: any }) => {
     emit('update:modelValue', editor.getHTML())
   },
 })
@@ -71,7 +71,7 @@ watch(
   () => props.modelValue,
   (value) => {
     if (editor.value && editor.value.getHTML() !== value) {
-      editor.value.commands.setContent(value, { emitUpdate: false })
+      editor.value.commands.setContent(value, false)
     }
   },
 )
