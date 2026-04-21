@@ -7,7 +7,7 @@ interface Props {
 
 defineOptions({ name: 'BlogSectionOne' })
 
-const props = defineProps<Props>()
+defineProps<Props>()
 </script>
 
 <template>

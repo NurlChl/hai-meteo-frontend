@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import type { FetchError } from '~/types'
 import FormInput from '~/components/admin/FormInput.vue'
 import Modal from '~/components/admin/Modal.vue'
 import Pagination from '~/components/admin/Pagination.vue'
+import { getMediaFilename } from '~/utils/mediaFilename'
 
 definePageMeta({
   layout: 'admin',
@@ -39,6 +41,11 @@ const pageSize = ref(10)
 const total = ref(0)
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
+
+function getUploadErrorMessage(error: unknown, fallback: string): string {
+  const fetchError = error as FetchError
+  return fetchError.data?.message || fetchError.message || fallback
+}
 
 async function loadMedia() {
   try {
@@ -131,7 +138,7 @@ async function handleUpload() {
   }
   catch (err) {
     console.error(err)
-    toast.error('Failed to upload media')
+    toast.error(getUploadErrorMessage(err, 'Failed to upload media'))
   }
   finally {
     uploading.value = false
@@ -198,7 +205,7 @@ onMounted(() => {
           </div>
           <div class="p-4">
             <p class="text-sm font-medium text-text-primary truncate">
-              {{ media.fileUrl.split('/').pop() }}
+              {{ getMediaFilename(media.fileUrl) }}
             </p>
             <p class="text-xs text-text-muted mt-1">
               {{ media.mimeType }}

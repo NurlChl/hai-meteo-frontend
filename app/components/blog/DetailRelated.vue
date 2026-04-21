@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BlogImage, BlogPost } from '~/data/blogDefaults'
+import type { BlogPost } from '~/data/blogDefaults'
 
 interface Props {
   posts: BlogPost[]

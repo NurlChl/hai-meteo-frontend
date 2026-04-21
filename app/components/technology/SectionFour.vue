@@ -22,7 +22,7 @@ defineProps<{
         </p>
       </div>
 
-      <div class="relative w-full max-w-[1000px] mx-auto">
+      <div v-if="content.image.url" class="relative w-full max-w-[1000px] mx-auto">
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-900/20 blur-[100px] rounded-full -z-10" />
 
         <img

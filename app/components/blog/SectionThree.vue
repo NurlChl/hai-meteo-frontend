@@ -60,9 +60,7 @@ watch(totalPages, (value) => {
 <template>
   <section class="py-12 md:py-16 lg:py-20 px-6 md:px-12 lg:px-[120px] bg-bg-primary min-h-screen">
     <div class="mx-auto max-w-[1440px]">
-      <!-- Filters and Search -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 md:mb-12">
-        <!-- Categories -->
         <div class="flex items-center gap-4 md:gap-8 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
           <button
             v-for="category in content.categories"
@@ -75,7 +73,6 @@ watch(totalPages, (value) => {
           </button>
         </div>
 
-        <!-- Search -->
         <div class="relative w-full lg:w-[320px]">
           <input
             v-model="searchQuery"
@@ -89,7 +86,6 @@ watch(totalPages, (value) => {
         </div>
       </div>
 
-      <!-- Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12 md:mb-16">
         <NuxtLink v-for="post in visiblePosts" :key="post.id" :to="`/blog/${post.id}`" class="flex flex-col group cursor-pointer">
           <div class="relative w-full aspect-[16/10] bg-white/5 rounded-2xl overflow-hidden mb-6">
@@ -116,7 +112,6 @@ watch(totalPages, (value) => {
         </div>
       </div>
 
-      <!-- Pagination -->
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-t border-white/10 pt-6 md:pt-8">
         <div class="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
           <button class="px-4 py-2 rounded-lg border border-white/10 text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentPage === 1" @click="currentPage = Math.max(1, currentPage - 1)">

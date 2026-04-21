@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { FetchError } from '~/types'
+import { getMediaFilename } from '~/utils/mediaFilename'
+
 interface MediaAsset {
   id: number
   fileUrl: string
@@ -59,6 +62,11 @@ const selectedMedia = computed(() => {
   return mediaAssets.value.find(m => m.id === Number(selectedId.value))
 })
 
+function getUploadErrorMessage(error: unknown, fallback: string): string {
+  const fetchError = error as FetchError
+  return fetchError.data?.message || fetchError.message || fallback
+}
+
 async function loadMediaAssets() {
   loading.value = true
   loadError.value = false
@@ -81,7 +89,7 @@ async function loadMediaAssets() {
 }
 
 function getMediaLabel(media: MediaAsset): string {
-  const filename = media.fileUrl.split('/').pop() || 'Unknown'
+  const filename = getMediaFilename(media.fileUrl) || 'Unknown'
   const dimensions = `${media.width}x${media.height}`
   return `${filename} (${dimensions})`
 }
@@ -111,7 +119,7 @@ async function handleFileUpload(event: Event) {
   }
   catch (err) {
     console.error('Failed to upload file:', err)
-    toast.error('Failed to upload media asset')
+    toast.error(getUploadErrorMessage(err, 'Failed to upload media asset'))
   }
   finally {
     uploading.value = false
@@ -199,7 +207,7 @@ onMounted(() => {
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-text-primary truncate">
-              {{ selectedMedia.fileUrl.split('/').pop() }}
+              {{ getMediaFilename(selectedMedia.fileUrl) }}
             </p>
             <p class="text-xs text-text-muted mt-1">
               {{ selectedMedia.mimeType }}

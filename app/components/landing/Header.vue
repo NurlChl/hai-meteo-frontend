@@ -1,13 +1,7 @@
 <script setup lang="ts">
-const route = useRoute()
+import { defaultLandingHeaderNavigation } from '~/data/landingNavigationDefaults'
 
-const navigation = [
-  { name: 'Features', href: '/features' },
-  { name: 'Technologies', href: '/technology' },
-  { name: 'Partnership', href: '/partnership' },
-  { name: 'FAQ', href: '/#faq' },
-  { name: 'Blog', href: '/blog' },
-]
+const route = useRoute()
 
 const isActive = (path: string) => route.path === path || (path !== '/' && route.path.startsWith(path))
 </script>
@@ -23,7 +17,7 @@ const isActive = (path: string) => route.path === path || (path !== '/' && route
 
       <nav class="hidden lg:flex items-center gap-6 xl:gap-8">
         <NuxtLink
-          v-for="item in navigation"
+          v-for="item in defaultLandingHeaderNavigation"
           :key="item.name"
           :to="item.href"
           class="relative font-['Inter'] font-normal text-[13px] leading-[26px] flex items-center tracking-[-0.0001em] text-white/60 hover:text-white transition-colors p-[14px]"

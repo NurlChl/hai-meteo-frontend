@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { object, string } from 'valibot'
 
 export default defineNuxtConfig({

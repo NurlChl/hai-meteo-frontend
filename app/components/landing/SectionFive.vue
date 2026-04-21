@@ -9,7 +9,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const { get } = useApi()
-const config = useRuntimeConfig()
+const { resolveMediaUrl } = useMediaUrl()
 
 const newsItems = ref<LandingSectionFiveContent[]>([])
 const currentIndex = ref(0)
@@ -27,29 +27,18 @@ const dotsCount = computed(() => {
 })
 
 function formatDate(value: string | null): string {
-  if (!value) return ''
+  if (!value)
+    return ''
+
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
+  if (Number.isNaN(date.getTime()))
+    return ''
+
   return new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   }).format(date)
-}
-
-function resolveMediaUrl(fileUrl: string): string {
-  if (!fileUrl) return ''
-  try {
-    const apiUrl = new URL(config.public.apiBase as string)
-    const backendOrigin = apiUrl.origin
-    if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
-      const parsed = new URL(fileUrl)
-      return `${backendOrigin}${parsed.pathname}`
-    }
-    return `${backendOrigin}${fileUrl}`
-  } catch {
-    return fileUrl
-  }
 }
 
 onMounted(async () => {
@@ -76,8 +65,9 @@ onMounted(async () => {
                 imageUrl = resolveMediaUrl(media.fileUrl)
               }
               imageAlt = media.altText || post.title
-            } catch {
-              // Ignore media fetch error
+            }
+            catch {
+
             }
           }
 
@@ -89,16 +79,18 @@ onMounted(async () => {
               url: imageUrl || props.content.image.url,
               alt: imageAlt,
             },
-            link: `/blog/${post.id}`
+            link: `/blog/${post.id}`,
           }
-        })
+        }),
       )
 
       newsItems.value = formattedItems
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch latest news for landing page:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 })
@@ -110,6 +102,7 @@ onMounted(async () => {
       <div class="lg:w-1/2 w-full relative">
         <div class="relative aspect-square rounded-3xl overflow-hidden shadow-2xl border border-gray-800 group">
           <img
+            v-if="currentNews.image.url"
             :src="currentNews.image.url"
             :alt="currentNews.image.alt"
             class="w-full h-full object-cover transition-opacity duration-300"
@@ -123,8 +116,8 @@ onMounted(async () => {
             :key="index"
             class="w-3 h-3 rounded-full transition-colors duration-200"
             :class="index === currentIndex ? 'bg-blue-500' : 'bg-gray-700 hover:bg-gray-500'"
-            @click="currentIndex = index"
             :aria-label="`Slide ${index + 1}`"
+            @click="currentIndex = index"
           />
         </div>
       </div>

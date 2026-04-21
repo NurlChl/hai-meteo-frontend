@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'node:url'
-import { defineVitestConfig } from '@nuxt/test-utils/config'
 import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vitest/config'
 
-export default defineVitestConfig({
+export default defineConfig({
   plugins: [vue()],
   test: {
     include: ['app/**/*.test.ts', 'app/**/*.spec.ts'],

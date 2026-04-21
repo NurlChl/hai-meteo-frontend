@@ -14,7 +14,6 @@ function handleRequestDemo() {
 
 <template>
   <section class="relative w-full py-20 lg:py-32 px-6 md:px-12 lg:px-[120px] bg-bg-primary overflow-hidden">
-    <!-- Background Image -->
     <div class="absolute top-0 right-0 h-full w-full pointer-events-none z-0">
       <img
         src="/images/technology/sectionone/BackgroundSectionOne.png"
@@ -25,11 +24,10 @@ function handleRequestDemo() {
     </div>
 
     <div class="max-w-[1440px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-10 relative">
-      <!-- Left Column: Content -->
       <div class="relative flex flex-col justify-start items-start gap-7 max-w-xl z-10">
         <h2 class="self-stretch text-white text-4xl md:text-5xl lg:text-6xl font-medium font-['Inter'] leading-tight lg:leading-[68px] whitespace-pre-line">
           Experience
-the Future of Forecasting
+          the Future of Forecasting
         </h2>
         <p class="self-stretch text-gray-300 text-lg md:text-xl font-normal font-['Inter'] leading-8">
           HAI-Meteo delivers reliable, enterprise-grade weather forecasts without the technical complexities.
@@ -70,9 +68,7 @@ the Future of Forecasting
         </div>
       </div>
 
-      <!-- Right Column: Video -->
       <div class="relative w-full max-w-[600px] lg:max-w-[530px] flex justify-center lg:justify-end">
-        <!-- Video Content -->
         <div class="relative w-full aspect-square md:aspect-video lg:aspect-square flex items-center justify-center">
           <video
             autoplay
@@ -81,7 +77,7 @@ the Future of Forecasting
             playsinline
             class="w-full h-full object-contain mix-blend-screen"
           >
-            <source src="/video/strom.mp4" type="video/mp4" />
+            <source src="/video/strom.mp4" type="video/mp4">
           </video>
         </div>
       </div>

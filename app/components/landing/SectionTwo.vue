@@ -6,7 +6,7 @@ interface Props {
   content: LandingSectionTwoContent
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const iconMap: Record<string, any> = {
   MapPin,
@@ -16,17 +16,19 @@ const iconMap: Record<string, any> = {
 }
 
 function getIcon(iconName: string) {
-  return iconMap[iconName] || MapPin
+  return iconMap[iconName]
+}
+
+function isAssetUrl(value: string) {
+  return value.startsWith('/') || value.startsWith('http://') || value.startsWith('https://')
 }
 </script>
 
 <template>
   <section class="section-two relative py-24 px-6 md:px-28 overflow-hidden bg-[#020515] text-white">
-    <!-- Background Glow -->
     <div class="absolute top-[133px] left-1/2 -translate-x-1/2 w-72 h-44 opacity-80 bg-[radial-gradient(ellipse_55.05%_55.05%_at_50.00%_50.00%,_rgba(0,_42,_254,_0)_0%,_rgba(0,_42,_254,_0.24)_100%)] rounded-full blur-3xl pointer-events-none" />
 
     <div class="max-w-[1200px] mx-auto flex flex-col items-center gap-20 relative z-10">
-      <!-- Header -->
       <div class="flex flex-col items-center gap-8">
         <h2 class="text-blue-500 text-2xl font-semibold font-['Inter'] leading-8">
           {{ content.description }}
@@ -36,32 +38,24 @@ function getIcon(iconName: string) {
         </h3>
       </div>
 
-      <!-- Features + Button -->
       <div class="self-stretch flex flex-col items-center gap-14">
-        <!-- Feature Cards -->
         <div class="w-full relative flex flex-wrap justify-center lg:justify-between items-center gap-6 lg:gap-0">
-          <!-- Horizontal Connector Line -->
           <div class="hidden lg:block absolute top-[115px] left-0 w-full h-0 border-t border-dashed border-white/20" />
 
-          <!-- Animated White Line -->
           <div class="hidden lg:block absolute top-[115px] left-0 w-full h-[1px] overflow-hidden pointer-events-none">
             <div class="absolute top-0 w-[20%] h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-80 animate-beam" />
           </div>
 
-          <!-- Feature Card -->
           <div
             v-for="(feature, index) in content.features"
             :key="index"
             class="w-64 h-48 relative"
           >
-            <!-- Card Body -->
             <div class="w-64 px-6 pt-16 pb-7 absolute top-[38px] left-0 rounded-3xl outline outline-1 outline-offset-[-1px] outline-white/10 flex flex-col justify-center items-center gap-5" style="background: conic-gradient(from 255deg at 50% 50%, rgba(0, 0, 0, 0) 160deg, rgba(59, 130, 246, 0.30) 240deg, rgba(46, 81, 140, 0.12) 300deg, rgba(0, 0, 0, 0) 360deg), rgba(2, 5, 21, 0.80);">
-              <!-- Feature Title -->
               <div class="self-stretch text-center text-white text-2xl font-normal font-['Inter'] leading-8 whitespace-pre-line">
                 {{ feature.title }}
               </div>
 
-              <!-- Star Decorations -->
               <div class="w-52 absolute left-[23px] top-[24px] flex justify-between items-center">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="white" xmlns="http://www.w3.org/2000/svg">
                   <path d="M6 0L7.29 4.71L12 6L7.29 7.29L6 12L4.71 7.29L0 6L4.71 4.71L6 0Z" />
@@ -72,14 +66,21 @@ function getIcon(iconName: string) {
               </div>
             </div>
 
-            <!-- Icon Circle -->
-            <div class="w-20 h-20 absolute left-1/2 -translate-x-1/2 top-0 bg-blue-600/20 rounded-full outline outline-1 outline-offset-[-1px] outline-sky-700 backdrop-blur-xl flex justify-center items-center">
-              <component :is="getIcon(feature.icon)" class="w-8 h-8 text-white relative z-10" :stroke-width="1.5" />
+            <div
+              v-if="feature.icon && (isAssetUrl(feature.icon) || getIcon(feature.icon))"
+              class="w-20 h-20 absolute left-1/2 -translate-x-1/2 top-0 bg-blue-600/20 rounded-full outline outline-1 outline-offset-[-1px] outline-sky-700 backdrop-blur-xl flex justify-center items-center"
+            >
+              <img
+                v-if="isAssetUrl(feature.icon)"
+                :src="feature.icon"
+                :alt="feature.title"
+                class="w-10 h-10 object-contain relative z-10"
+              >
+              <component :is="getIcon(feature.icon)" v-else class="w-8 h-8 text-white relative z-10" :stroke-width="1.5" />
             </div>
           </div>
         </div>
 
-        <!-- See More Button Wrapper -->
         <div class="relative mt-8 group z-10 flex justify-center">
           <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-sky-400 rounded-full blur-md opacity-20 group-hover:opacity-60 transition duration-1000 group-hover:duration-300" />
 

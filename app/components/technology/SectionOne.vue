@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
   <section class=" relative py-12 md:py-20 lg:py-[90px] px-6 md:px-12 lg:px-[120px] overflow-hidden bg-bg-primary">
-    <div v-if="content.backgroundImage">
+    <div v-if="content.backgroundImage?.url">
       <img :src="content.backgroundImage.url" :alt="content.backgroundImage.alt" class="absolute top-0 min-[1440px]: right-0 h-full object-cover pointer-events-none z-0 opacity-50 lg:opacity-100">
     </div>
 
@@ -26,7 +26,7 @@ defineProps<{
           </p>
         </div>
 
-        <div class="block lg:flex-shrink-0 flex justify-center lg:justify-end mt-8 lg:mt-0">
+        <div v-if="content.image.url" class="block lg:flex-shrink-0 flex justify-center lg:justify-end mt-8 lg:mt-0">
           <img :src="content.image.url" :alt="content.image.alt" class="w-full max-w-[300px] md:max-w-[400px] lg:max-w-[450px] h-auto">
         </div>
       </div>

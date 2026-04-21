@@ -1,61 +1,43 @@
 <script setup lang="ts">
-type ValueType = 'text' | 'list' | 'image'
-type ListItemValueType = 'text' | 'image'
+import type { SectionFieldSchema, SectionFieldType } from './sectionSchemas'
+import type { FetchError } from '~/types'
+import type { MediaAsset } from '~/types/models'
+import { getMediaFilename } from '~/utils/mediaFilename'
+import { getSectionSchema } from './sectionSchemas'
 
-interface ContentKeyOption {
+interface MediaRef {
+  __mediaId: number
+}
+
+interface EditorFieldState {
+  id: string
   key: string
   label: string
-  valueType: ValueType
-  description: string
-}
-
-interface ListItemKeyOption {
-  key: string
-  label: string
-  valueType: ListItemValueType
-}
-
-interface ListItemField {
-  id: string
-  key: string
-  valueType: ListItemValueType
+  type: SectionFieldType
+  helperText?: string
   textValue: string
-  imageValue: number | null
-  imageUrl: string
-  imageUploading: boolean
+  mediaId: number | null
+  mediaUrl: string
+  uploading: boolean
+  listItems: ListItemState[]
+  itemFields?: SectionFieldSchema[]
 }
 
-interface ListItem {
+interface ListItemState {
   id: string
-  fields: ListItemField[]
-}
-
-interface MediaAsset {
-  id: number
-  fileUrl: string
-  altText: string
-  mimeType: string
-}
-
-interface Field {
-  id: string
-  key: string
-  valueType: ValueType
-  textValue: string
-  listValue: ListItem[]
-  imageValue: number | null
-  imageUrl: string
-  imageUploading: boolean
+  fields: EditorFieldState[]
 }
 
 interface Props {
   modelValue: Record<string, unknown>
+  sectionKey?: string
   label?: string
   helperText?: string
   error?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  sectionKey: '',
   label: 'Content',
   helperText: 'Build your section content dynamically',
   error: '',
@@ -64,780 +46,424 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:modelValue': [value: Record<string, unknown>]
 }>()
+
 const { upload, get } = useApi()
 const toast = useToast()
 
-const contentKeyOptions: ContentKeyOption[] = [
-  {
-    key: 'title',
-    label: 'Title',
-    valueType: 'text',
-    description: 'Main heading text',
-  },
-  {
-    key: 'description',
-    label: 'Description',
-    valueType: 'text',
-    description: 'Descriptive paragraph text',
-  },
-  {
-    key: 'items',
-    label: 'Items',
-    valueType: 'list',
-    description: 'List of items (title, description, icon, image)',
-  },
-  {
-    key: 'image',
-    label: 'Image',
-    valueType: 'image',
-    description: 'Primary section image',
-  },
-  {
-    key: 'backgroundImage',
-    label: 'Background Image',
-    valueType: 'image',
-    description: 'Background image for this section',
-  },
-  {
-    key: 'ctaText',
-    label: 'CTA Text',
-    valueType: 'text',
-    description: 'Call-to-action button text',
-  },
-  {
-    key: 'ctaHref',
-    label: 'CTA Link',
-    valueType: 'text',
-    description: 'Call-to-action link target',
-  },
-  {
-    key: 'submitText',
-    label: 'Submit Text',
-    valueType: 'text',
-    description: 'Submit button text',
-  },
-  {
-    key: 'features',
-    label: 'Features',
-    valueType: 'list',
-    description: 'List of features',
-  },
-  {
-    key: 'solutions',
-    label: 'Solutions',
-    valueType: 'list',
-    description: 'List of solutions',
-  },
-  {
-    key: 'technologies',
-    label: 'Technologies',
-    valueType: 'list',
-    description: 'List of technologies',
-  },
-  {
-    key: 'faqs',
-    label: 'FAQs',
-    valueType: 'list',
-    description: 'List of frequently asked questions',
-  },
-  {
-    key: 'date',
-    label: 'Date',
-    valueType: 'text',
-    description: 'Date string or label for news section',
-  },
-]
-
-const listItemKeyOptions: ListItemKeyOption[] = [
-  { key: 'id', label: 'ID', valueType: 'text' },
-  { key: 'title', label: 'Title', valueType: 'text' },
-  { key: 'description', label: 'Description', valueType: 'text' },
-  { key: 'icon', label: 'Icon', valueType: 'text' },
-  { key: 'image', label: 'Image', valueType: 'image' },
-  { key: 'question', label: 'Question', valueType: 'text' },
-  { key: 'answer', label: 'Answer', valueType: 'text' },
-]
+const schema = computed(() => props.sectionKey ? getSectionSchema(props.sectionKey) : null)
+const fields = ref<EditorFieldState[]>([])
+const initializing = ref(false)
 
 function generateId(): string {
-  return Math.random().toString(36).substr(2, 9)
+  return Math.random().toString(36).slice(2, 11)
 }
 
-const fields = ref<Field[]>([])
-
-const availableKeys = computed(() => {
-  const usedKeys = fields.value.map(f => f.key)
-  return contentKeyOptions.filter(opt => !usedKeys.includes(opt.key))
-})
-
-const canAddField = computed(() => availableKeys.value.length > 0)
-
-function getKeyOption(key: string): ContentKeyOption | undefined {
-  return contentKeyOptions.find(opt => opt.key === key)
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
 }
 
-function getKeyLabel(key: string): string {
-  return getKeyOption(key)?.label || key
+function isMediaRef(value: unknown): value is MediaRef {
+  return isRecord(value) && typeof value.__mediaId === 'number'
 }
 
-function getListItemKeyOption(key: string): ListItemKeyOption | undefined {
-  return listItemKeyOptions.find(opt => opt.key === key)
+function isMediaFieldType(type: SectionFieldType): boolean {
+  return type === 'image' || type === 'icon' || type === 'video'
 }
 
-function getListItemKeyLabel(key: string): string {
-  return getListItemKeyOption(key)?.label || key
+function buildEmptyField(fieldSchema: SectionFieldSchema): EditorFieldState {
+  return {
+    id: generateId(),
+    key: fieldSchema.key,
+    label: fieldSchema.label,
+    type: fieldSchema.type,
+    helperText: fieldSchema.helperText,
+    textValue: '',
+    mediaId: null,
+    mediaUrl: '',
+    uploading: false,
+    listItems: [],
+    itemFields: fieldSchema.itemFields,
+  }
 }
 
-function getAvailableListItemKeys(item: ListItem): ListItemKeyOption[] {
-  const usedKeys = item.fields.map(f => f.key)
-  return listItemKeyOptions.filter(opt => !usedKeys.includes(opt.key))
+async function resolveMediaPreview(mediaId: number | null): Promise<string> {
+  if (!mediaId)
+    return ''
+
+  try {
+    const media = await get<MediaAsset>(`/media-assets/${mediaId}`)
+    return media.fileUrl || ''
+  }
+  catch {
+    return ''
+  }
 }
 
-function canAddListItemField(item: ListItem): boolean {
-  return getAvailableListItemKeys(item).length > 0
+async function hydrateFieldValue(field: EditorFieldState, value: unknown) {
+  if (field.type === 'list') {
+    const items = Array.isArray(value) ? value : []
+    field.listItems = await Promise.all(items.map(item => buildListItem(field.itemFields || [], item)))
+    return
+  }
+
+  if (isMediaFieldType(field.type)) {
+    if (isMediaRef(value)) {
+      field.mediaId = value.__mediaId
+      field.mediaUrl = await resolveMediaPreview(value.__mediaId)
+    }
+    else if (typeof value === 'string' && value.trim()) {
+      field.textValue = value
+      field.mediaUrl = value
+    }
+    return
+  }
+
+  field.textValue = typeof value === 'string' ? value : String(value ?? '')
+}
+
+async function buildListItem(itemSchemas: SectionFieldSchema[], value: unknown): Promise<ListItemState> {
+  const source = isRecord(value) ? value : {}
+  const fields = await Promise.all(itemSchemas.map(async (itemSchema) => {
+    const field = buildEmptyField(itemSchema)
+    await hydrateFieldValue(field, source[itemSchema.key])
+    return field
+  }))
+
+  return {
+    id: generateId(),
+    fields,
+  }
 }
 
 async function initializeFields() {
-  const value = props.modelValue
-  if (!value || Object.keys(value).length === 0) {
-    fields.value = []
-    return
+  initializing.value = true
+
+  try {
+    if (!schema.value) {
+      fields.value = []
+      return
+    }
+
+    const nextFields = await Promise.all(schema.value.fields.map(async (fieldSchema) => {
+      const field = buildEmptyField(fieldSchema)
+      await hydrateFieldValue(field, props.modelValue?.[fieldSchema.key])
+      return field
+    }))
+
+    fields.value = nextFields
   }
-
-  const fieldsToInit: Field[] = []
-
-  for (const [key, val] of Object.entries(value)) {
-    const keyOption = getKeyOption(key)
-    const valueType = keyOption?.valueType || 'text'
-
-    const field: Field = {
-      id: generateId(),
-      key,
-      valueType,
-      textValue: '',
-      listValue: [],
-      imageValue: null,
-      imageUrl: '',
-      imageUploading: false,
-    }
-
-    if (valueType === 'image' && typeof val === 'object' && val !== null && '__mediaId' in val) {
-      field.imageValue = (val as { __mediaId: number }).__mediaId
-      try {
-        const media = await get<MediaAsset>(`/media-assets/${field.imageValue}`)
-        field.imageUrl = media.fileUrl
-      }
-      catch {
-        field.imageUrl = ''
-      }
-    }
-    else if (valueType === 'list' && Array.isArray(val)) {
-      const listItems: ListItem[] = []
-      for (const item of val) {
-        const listItem: ListItem = {
-          id: generateId(),
-          fields: [],
-        }
-
-        for (const [itemKey, itemVal] of Object.entries(item)) {
-          const itemKeyOption = getListItemKeyOption(itemKey)
-          const itemValueType = itemKeyOption?.valueType || 'text'
-
-          const listItemField: ListItemField = {
-            id: generateId(),
-            key: itemKey,
-            valueType: itemValueType,
-            textValue: '',
-            imageValue: null,
-            imageUrl: '',
-            imageUploading: false,
-          }
-
-          if (itemValueType === 'image' && typeof itemVal === 'object' && itemVal !== null && '__mediaId' in itemVal) {
-            listItemField.imageValue = (itemVal as { __mediaId: number }).__mediaId
-            try {
-              const media = await get<MediaAsset>(`/media-assets/${listItemField.imageValue}`)
-              listItemField.imageUrl = media.fileUrl
-            }
-            catch {
-              listItemField.imageUrl = ''
-            }
-          }
-          else {
-            listItemField.textValue = String(itemVal ?? '')
-          }
-
-          listItem.fields.push(listItemField)
-        }
-
-        listItems.push(listItem)
-      }
-      field.listValue = listItems
-    }
-    else if (valueType === 'text') {
-      field.textValue = String(val ?? '')
-    }
-
-    fieldsToInit.push(field)
+  finally {
+    initializing.value = false
   }
-
-  fields.value = fieldsToInit
 }
 
-function fieldsToJson(): Record<string, unknown> {
-  const result: Record<string, unknown> = {}
-
-  for (const field of fields.value) {
-    if (!field.key)
-      continue
-
-    switch (field.valueType) {
-      case 'image':
-        if (field.imageValue) {
-          result[field.key] = { __mediaId: field.imageValue }
-        }
-        break
-      case 'list':
-        result[field.key] = field.listValue.map((item) => {
-          const obj: Record<string, unknown> = {}
-          for (const f of item.fields) {
-            if (f.key) {
-              if (f.valueType === 'image' && f.imageValue) {
-                obj[f.key] = { __mediaId: f.imageValue }
-              }
-              else {
-                obj[f.key] = f.textValue
-              }
-            }
-          }
-          return obj
-        })
-        break
-      default:
-        result[field.key] = field.textValue
-    }
+function fieldToJson(field: EditorFieldState): unknown {
+  if (field.type === 'list') {
+    return field.listItems.map((item) => {
+      const result: Record<string, unknown> = {}
+      for (const childField of item.fields) {
+        result[childField.key] = fieldToJson(childField)
+      }
+      return result
+    })
   }
 
-  return result
+  if (isMediaFieldType(field.type)) {
+    return field.mediaId ? { __mediaId: field.mediaId } : ''
+  }
+
+  return field.textValue
 }
 
 function emitChange() {
-  emit('update:modelValue', fieldsToJson())
+  if (!schema.value || initializing.value)
+    return
+
+  const nextValue: Record<string, unknown> = {}
+  for (const field of fields.value) {
+    nextValue[field.key] = fieldToJson(field)
+  }
+
+  emit('update:modelValue', nextValue)
 }
 
-function addField() {
-  if (!canAddField.value)
+function addListItem(field: EditorFieldState) {
+  if (!field.itemFields)
     return
 
-  const firstAvailable = availableKeys.value[0]
-  if (!firstAvailable)
-    return
-
-  const field: Field = {
+  field.listItems.push({
     id: generateId(),
-    key: firstAvailable.key,
-    valueType: firstAvailable.valueType,
-    textValue: '',
-    listValue: [],
-    imageValue: null,
-    imageUrl: '',
-    imageUploading: false,
-  }
-
-  if (firstAvailable.valueType === 'list') {
-    field.listValue.push({
-      id: generateId(),
-      fields: [{
-        id: generateId(),
-        key: 'title',
-        valueType: 'text',
-        textValue: '',
-        imageValue: null,
-        imageUrl: '',
-        imageUploading: false,
-      }],
-    })
-  }
-
-  fields.value.push(field)
-  emitChange()
-}
-
-function handleKeyChange(field: Field, newKey: string) {
-  const keyOption = getKeyOption(newKey)
-  if (!keyOption)
-    return
-
-  field.key = newKey
-  field.valueType = keyOption.valueType
-  field.textValue = ''
-  field.listValue = []
-  field.imageValue = null
-  field.imageUrl = ''
-
-  if (keyOption.valueType === 'list') {
-    field.listValue.push({
-      id: generateId(),
-      fields: [{
-        id: generateId(),
-        key: 'title',
-        valueType: 'text',
-        textValue: '',
-        imageValue: null,
-        imageUrl: '',
-        imageUploading: false,
-      }],
-    })
-  }
-
-  emitChange()
-}
-
-function removeField(id: string) {
-  fields.value = fields.value.filter(f => f.id !== id)
-  emitChange()
-}
-
-function addListItem(field: Field) {
-  field.listValue.push({
-    id: generateId(),
-    fields: [{
-      id: generateId(),
-      key: 'title',
-      valueType: 'text',
-      textValue: '',
-      imageValue: null,
-      imageUrl: '',
-      imageUploading: false,
-    }],
+    fields: field.itemFields.map(buildEmptyField),
   })
   emitChange()
 }
 
-function removeListItem(field: Field, itemId: string) {
-  field.listValue = field.listValue.filter(item => item.id !== itemId)
+function removeListItem(field: EditorFieldState, itemId: string) {
+  field.listItems = field.listItems.filter(item => item.id !== itemId)
   emitChange()
 }
 
-function addListItemField(item: ListItem) {
-  const available = getAvailableListItemKeys(item)
-  const firstAvailable = available[0]
-  if (!firstAvailable)
-    return
+function shouldShowListChildField(
+  parentField: EditorFieldState,
+  childField: EditorFieldState,
+  itemIndex: number,
+): boolean {
+  if (
+    props.sectionKey === 'features-section-three'
+    && parentField.key === 'bottomFeatures'
+    && childField.key === 'secondaryImage'
+  ) {
+    return itemIndex === 0
+  }
 
-  item.fields.push({
-    id: generateId(),
-    key: firstAvailable.key,
-    valueType: firstAvailable.valueType,
-    textValue: '',
-    imageValue: null,
-    imageUrl: '',
-    imageUploading: false,
-  })
-  emitChange()
+  return true
 }
 
-function handleListItemKeyChange(item: ListItem, fieldItem: ListItemField, newKey: string) {
-  const keyOption = getListItemKeyOption(newKey)
-  if (!keyOption)
-    return
+function getAcceptForType(type: SectionFieldType): string {
+  if (type === 'video')
+    return 'video/*'
 
-  fieldItem.key = newKey
-  fieldItem.valueType = keyOption.valueType
-  fieldItem.textValue = ''
-  fieldItem.imageValue = null
-  fieldItem.imageUrl = ''
-  emitChange()
+  return 'image/*,.svg'
 }
 
-function removeListItemField(item: ListItem, fieldId: string) {
-  item.fields = item.fields.filter(f => f.id !== fieldId)
-  emitChange()
+function matchesAcceptedType(file: File, type: SectionFieldType): boolean {
+  if (type === 'video')
+    return file.type.startsWith('video/')
+
+  return file.type.startsWith('image/') || file.type === 'image/svg+xml'
 }
 
-async function handleImageUpload(field: Field, event: Event) {
+function getMediaLabel(type: SectionFieldType): string {
+  if (type === 'icon')
+    return 'icon'
+  if (type === 'video')
+    return 'video'
+  return 'image'
+}
+
+function getUploadErrorMessage(error: unknown, fallback: string): string {
+  const fetchError = error as FetchError
+  return fetchError.data?.message || fetchError.message || fallback
+}
+
+async function uploadMedia(field: EditorFieldState, event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file)
     return
 
-  if (!file.type.startsWith('image/')) {
-    toast.error('Please select an image file')
+  if (!matchesAcceptedType(file, field.type)) {
+    toast.error(`Please select a valid ${getMediaLabel(field.type)} file`)
+    input.value = ''
     return
   }
 
-  field.imageUploading = true
+  field.uploading = true
   try {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('altText', file.name)
 
     const response = await upload<MediaAsset>('/media-assets/upload', formData)
-    field.imageValue = response.id
-    field.imageUrl = response.fileUrl
+    field.mediaId = response.id
+    field.mediaUrl = response.fileUrl
     emitChange()
-    toast.success('Image uploaded successfully')
+    toast.success(`${getMediaLabel(field.type)} uploaded successfully`)
   }
-  catch (err) {
-    console.error('Upload failed:', err)
-    toast.error('Failed to upload image')
+  catch (error) {
+    console.error('Failed to upload media field:', error)
+    toast.error(getUploadErrorMessage(error, `Failed to upload ${getMediaLabel(field.type)}`))
   }
   finally {
-    field.imageUploading = false
+    field.uploading = false
     input.value = ''
   }
 }
 
-function removeImage(field: Field) {
-  field.imageValue = null
-  field.imageUrl = ''
-  emitChange()
-}
-
-async function handleListItemImageUpload(fieldItem: ListItemField, event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file)
-    return
-
-  if (!file.type.startsWith('image/')) {
-    toast.error('Please select an image file')
-    return
-  }
-
-  fieldItem.imageUploading = true
-  try {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('altText', file.name)
-
-    const response = await upload<MediaAsset>('/media-assets/upload', formData)
-    fieldItem.imageValue = response.id
-    fieldItem.imageUrl = response.fileUrl
-    emitChange()
-    toast.success('Image uploaded successfully')
-  }
-  catch (err) {
-    console.error('Upload failed:', err)
-    toast.error('Failed to upload image')
-  }
-  finally {
-    fieldItem.imageUploading = false
-    input.value = ''
-  }
-}
-
-function removeListItemImage(fieldItem: ListItemField) {
-  fieldItem.imageValue = null
-  fieldItem.imageUrl = ''
+function removeMedia(field: EditorFieldState) {
+  field.mediaId = null
+  field.mediaUrl = ''
   emitChange()
 }
 
 watch(
-  () => props.modelValue,
-  () => {
-    const currentJson = JSON.stringify(fieldsToJson())
-    const newJson = JSON.stringify(props.modelValue)
-    if (currentJson !== newJson) {
-      initializeFields()
-    }
+  () => [props.sectionKey, JSON.stringify(props.modelValue || {})],
+  async () => {
+    await initializeFields()
   },
-  { deep: true },
+  { immediate: true },
 )
 
-onMounted(() => {
-  initializeFields()
-})
-
 const inputClasses = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 text-text-primary placeholder:text-text-muted transition-all duration-300 outline-none text-sm'
-
-const selectClasses = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 text-text-primary transition-all duration-300 outline-none text-sm appearance-none cursor-pointer'
 </script>
 
 <template>
-  <div class="space-y-3">
+  <div class="space-y-4">
     <div class="flex items-center justify-between">
       <label class="block text-sm font-medium text-text-secondary">
         {{ label }}
       </label>
-      <button
-        v-if="canAddField"
-        type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300"
-        @click="addField"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Add Field
-      </button>
-      <span v-else class="text-xs text-text-muted">
-        All fields added
+      <span v-if="schema" class="text-xs text-text-muted">
+        {{ schema.fields.length }} fields
       </span>
     </div>
 
-    <div v-if="fields.length === 0" class="p-6 rounded-xl border border-dashed border-white/10 text-center">
+    <div v-if="!schema" class="p-6 rounded-xl border border-dashed border-white/10 text-center">
       <p class="text-text-muted text-sm">
-        No fields added yet. Click "Add Field" to start building your content.
+        No section schema found for this section key.
       </p>
+    </div>
+
+    <div v-else-if="initializing" class="p-6 rounded-xl border border-white/10 text-center text-text-muted text-sm">
+      Loading section content...
     </div>
 
     <div v-else class="space-y-4">
       <div
         v-for="field in fields"
         :key="field.id"
-        class="p-4 rounded-xl bg-white/[0.02] border border-white/10"
+        class="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-3"
       >
-        <div class="flex items-start gap-3 mb-3">
-          <div class="flex-1">
-            <select
-              :value="field.key"
-              :class="selectClasses"
-              @change="handleKeyChange(field, ($event.target as HTMLSelectElement).value)"
-            >
-              <option
-                :value="field.key"
-                class="bg-bg-dark text-white"
-              >
-                {{ getKeyLabel(field.key) }}
-              </option>
-              <option
-                v-for="opt in availableKeys"
-                :key="opt.key"
-                :value="opt.key"
-                class="bg-bg-dark text-white"
-              >
-                {{ opt.label }}
-              </option>
-            </select>
-            <p class="mt-1 text-xs text-text-muted">
-              {{ getKeyOption(field.key)?.description }}
-            </p>
-          </div>
-          <button
-            type="button"
-            class="p-2 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all"
-            title="Remove field"
-            @click="removeField(field.id)"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+        <div>
+          <p class="text-sm font-medium text-text-secondary">
+            {{ field.label }}
+          </p>
+          <p v-if="field.helperText" class="mt-1 text-xs text-text-muted">
+            {{ field.helperText }}
+          </p>
         </div>
 
-        <div v-if="field.valueType === 'text'">
+        <div v-if="field.type === 'text' || field.type === 'link'">
           <input
             v-model="field.textValue"
-            type="text"
-            placeholder="Enter text value"
+            :type="field.type === 'link' ? 'url' : 'text'"
+            :placeholder="`Enter ${field.label.toLowerCase()}`"
             :class="inputClasses"
             @input="emitChange"
           >
         </div>
 
-        <div v-else-if="field.valueType === 'image'" class="space-y-3">
-          <div v-if="field.imageUrl" class="relative rounded-lg overflow-hidden bg-white/5 border border-white/10 p-3">
-            <div class="flex items-start gap-3">
-              <div class="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-white/5">
-                <NuxtImg
-                  :src="field.imageUrl"
-                  alt="Uploaded image"
-                  class="w-full h-full object-cover"
-                />
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-text-primary truncate">
-                  {{ field.imageUrl.split('/').pop() }}
-                </p>
-                <p class="text-xs text-text-muted mt-1">
-                  Media ID: {{ field.imageValue }}
-                </p>
-                <button
-                  type="button"
-                  class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
-                  @click="removeImage(field)"
-                >
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Remove
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div v-else class="relative">
-            <label
-              :for="`image-upload-${field.id}`"
-              class="flex flex-col items-center justify-center w-full h-32 rounded-lg border-2 border-dashed cursor-pointer transition-all"
-              :class="field.imageUploading
-                ? 'border-primary/50 bg-primary/5'
-                : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'"
-            >
-              <div v-if="field.imageUploading" class="flex flex-col items-center">
-                <svg class="w-8 h-8 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span class="mt-2 text-xs text-text-muted">Uploading...</span>
-              </div>
-              <div v-else class="flex flex-col items-center">
-                <svg class="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span class="mt-2 text-xs text-text-muted">Click to upload image</span>
-                <span class="mt-1 text-xs text-text-muted/60">PNG, JPG, GIF up to 10MB</span>
-              </div>
-            </label>
-            <input
-              :id="`image-upload-${field.id}`"
-              type="file"
-              accept="image/*"
-              class="hidden"
-              :disabled="field.imageUploading"
-              @change="handleImageUpload(field, $event)"
-            >
-          </div>
+        <div v-else-if="field.type === 'textarea'">
+          <textarea
+            v-model="field.textValue"
+            rows="4"
+            :placeholder="`Enter ${field.label.toLowerCase()}`"
+            :class="inputClasses"
+            @input="emitChange"
+          />
         </div>
 
-        <div v-else-if="field.valueType === 'list'" class="space-y-3">
+        <div v-else-if="field.type === 'list'" class="space-y-3">
           <div
-            v-for="(item, itemIndex) in field.listValue"
+            v-for="(item, itemIndex) in field.listItems"
             :key="item.id"
-            class="p-3 rounded-lg bg-white/[0.03] border border-white/5"
+            class="p-3 rounded-lg bg-white/[0.03] border border-white/5 space-y-3"
           >
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between">
               <span class="text-xs font-medium text-text-muted">Item {{ itemIndex + 1 }}</span>
-              <div class="flex items-center gap-1">
-                <button
-                  v-if="canAddListItemField(item)"
-                  type="button"
-                  class="p-1 rounded text-primary hover:bg-primary/10 transition-all"
-                  title="Add property"
-                  @click="addListItemField(item)"
-                >
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="p-1 rounded text-red-400 hover:bg-red-500/10 transition-all"
-                  title="Remove item"
-                  @click="removeListItem(field, item.id)"
-                >
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+              <button
+                type="button"
+                class="p-1 rounded text-red-400 hover:bg-red-500/10 transition-all"
+                @click="removeListItem(field, item.id)"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            <div class="space-y-3">
+            <template
+              v-for="childField in item.fields"
+              :key="childField.id"
+            >
               <div
-                v-for="fieldItem in item.fields"
-                :key="fieldItem.id"
-                class="p-2 rounded-md bg-white/[0.02] border border-white/5"
+                v-if="shouldShowListChildField(field, childField, itemIndex)"
+                class="space-y-2"
               >
-                <div class="flex items-center gap-2 mb-2">
-                  <select
-                    :value="fieldItem.key"
-                    class="flex-1 px-2.5 py-1.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 text-text-primary transition-all outline-none text-xs appearance-none cursor-pointer"
-                    @change="handleListItemKeyChange(item, fieldItem, ($event.target as HTMLSelectElement).value)"
-                  >
-                    <option
-                      :value="fieldItem.key"
-                      class="bg-bg-dark text-white"
-                    >
-                      {{ getListItemKeyLabel(fieldItem.key) }}
-                    </option>
-                    <option
-                      v-for="opt in getAvailableListItemKeys(item)"
-                      :key="opt.key"
-                      :value="opt.key"
-                      class="bg-bg-dark text-white"
-                    >
-                      {{ opt.label }}
-                    </option>
-                  </select>
-                  <button
-                    v-if="item.fields.length > 1"
-                    type="button"
-                    class="p-1 rounded text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                    title="Remove property"
-                    @click="removeListItemField(item, fieldItem.id)"
-                  >
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+                <label class="block text-xs font-medium text-text-secondary">
+                  {{ childField.label }}
+                </label>
 
-                <div v-if="fieldItem.valueType === 'text'">
-                  <input
-                    v-model="fieldItem.textValue"
-                    type="text"
-                    :placeholder="`Enter ${getListItemKeyLabel(fieldItem.key).toLowerCase()}`"
-                    class="w-full px-2.5 py-1.5 rounded-md bg-white/5 border border-white/10 hover:border-white/20 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 text-text-primary placeholder:text-text-muted transition-all outline-none text-xs"
-                    @input="emitChange"
-                  >
-                </div>
+                <input
+                  v-if="childField.type === 'text' || childField.type === 'link'"
+                  v-model="childField.textValue"
+                  :type="childField.type === 'link' ? 'url' : 'text'"
+                  :placeholder="`Enter ${childField.label.toLowerCase()}`"
+                  :class="inputClasses"
+                  @input="emitChange"
+                >
 
-                <div v-else-if="fieldItem.valueType === 'image'">
-                  <div v-if="fieldItem.imageUrl" class="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/10">
-                    <NuxtImg
-                      :src="fieldItem.imageUrl"
-                      alt="Uploaded"
-                      class="w-12 h-12 rounded object-cover"
-                    />
-                    <div class="flex-1 min-w-0">
-                      <p class="text-xs text-text-primary truncate">
-                        {{ fieldItem.imageUrl.split('/').pop() }}
-                      </p>
-                      <p class="text-xs text-text-muted">
-                        ID: {{ fieldItem.imageValue }}
-                      </p>
+                <textarea
+                  v-else-if="childField.type === 'textarea'"
+                  v-model="childField.textValue"
+                  rows="3"
+                  :placeholder="`Enter ${childField.label.toLowerCase()}`"
+                  :class="inputClasses"
+                  @input="emitChange"
+                />
+
+                <div v-else class="space-y-3">
+                  <div
+                    v-if="childField.mediaUrl"
+                    class="rounded-lg border border-white/10 bg-white/5 p-3"
+                  >
+                    <div class="flex items-start gap-3">
+                      <div class="w-20 h-20 rounded-lg overflow-hidden bg-white/5 flex items-center justify-center">
+                        <video
+                          v-if="childField.type === 'video'"
+                          :src="childField.mediaUrl"
+                          class="w-full h-full object-cover"
+                          muted
+                          playsinline
+                        />
+                        <NuxtImg
+                          v-else
+                          :src="childField.mediaUrl"
+                          :alt="childField.label"
+                          class="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-text-primary truncate">
+                          {{ getMediaFilename(childField.mediaUrl) }}
+                        </p>
+                        <p class="text-xs text-text-muted mt-1">
+                          Media ID: {{ childField.mediaId }}
+                        </p>
+                        <button
+                          type="button"
+                          class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
+                          @click="removeMedia(childField)"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      class="p-1 rounded text-red-400 hover:bg-red-500/10 transition-all"
-                      @click="removeListItemImage(fieldItem)"
-                    >
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
                   </div>
+
                   <label
                     v-else
-                    :for="`list-image-${fieldItem.id}`"
-                    class="flex items-center justify-center gap-2 w-full py-3 rounded-md border border-dashed cursor-pointer transition-all"
-                    :class="fieldItem.imageUploading
+                    :for="`media-upload-${childField.id}`"
+                    class="flex flex-col items-center justify-center w-full h-28 rounded-lg border-2 border-dashed cursor-pointer transition-all"
+                    :class="childField.uploading
                       ? 'border-primary/50 bg-primary/5'
                       : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'"
                   >
-                    <svg v-if="fieldItem.imageUploading" class="w-4 h-4 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    <svg v-else class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
                     <span class="text-xs text-text-muted">
-                      {{ fieldItem.imageUploading ? 'Uploading...' : 'Upload image' }}
+                      {{ childField.uploading ? 'Uploading...' : `Upload ${getMediaLabel(childField.type)}` }}
                     </span>
                   </label>
                   <input
-                    :id="`list-image-${fieldItem.id}`"
+                    :id="`media-upload-${childField.id}`"
                     type="file"
-                    accept="image/*"
                     class="hidden"
-                    :disabled="fieldItem.imageUploading"
-                    @change="handleListItemImageUpload(fieldItem, $event)"
+                    :accept="getAcceptForType(childField.type)"
+                    :disabled="childField.uploading"
+                    @change="uploadMedia(childField, $event)"
                   >
                 </div>
               </div>
-            </div>
+            </template>
           </div>
 
           <button
@@ -847,6 +473,67 @@ const selectClasses = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-whit
           >
             + Add Item
           </button>
+        </div>
+
+        <div v-else class="space-y-3">
+          <div
+            v-if="field.mediaUrl"
+            class="rounded-lg border border-white/10 bg-white/5 p-3"
+          >
+            <div class="flex items-start gap-3">
+              <div class="w-24 h-24 rounded-lg overflow-hidden bg-white/5 flex items-center justify-center">
+                <video
+                  v-if="field.type === 'video'"
+                  :src="field.mediaUrl"
+                  class="w-full h-full object-cover"
+                  muted
+                  playsinline
+                />
+                <NuxtImg
+                  v-else
+                  :src="field.mediaUrl"
+                  :alt="field.label"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-text-primary truncate">
+                  {{ getMediaFilename(field.mediaUrl) }}
+                </p>
+                <p class="text-xs text-text-muted mt-1">
+                  Media ID: {{ field.mediaId }}
+                </p>
+                <button
+                  type="button"
+                  class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
+                  @click="removeMedia(field)"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <label
+            v-else
+            :for="`media-upload-${field.id}`"
+            class="flex flex-col items-center justify-center w-full h-32 rounded-lg border-2 border-dashed cursor-pointer transition-all"
+            :class="field.uploading
+              ? 'border-primary/50 bg-primary/5'
+              : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'"
+          >
+            <span class="text-xs text-text-muted">
+              {{ field.uploading ? 'Uploading...' : `Upload ${getMediaLabel(field.type)}` }}
+            </span>
+          </label>
+          <input
+            :id="`media-upload-${field.id}`"
+            type="file"
+            class="hidden"
+            :accept="getAcceptForType(field.type)"
+            :disabled="field.uploading"
+            @change="uploadMedia(field, $event)"
+          >
         </div>
       </div>
     </div>

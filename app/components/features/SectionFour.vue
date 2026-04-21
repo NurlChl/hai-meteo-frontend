@@ -13,18 +13,15 @@ const isPaused = ref(false)
 const currentSegment = ref(0)
 const segmentFraction = ref(0)
 
-const videoSources = [
-  '/video/features/Analytic Data.mp4',
-  '/video/features/Crop.mp4',
-  '/video/features/Slider.mp4',
-  '/video/features/Trend.mp4',
-  '/video/features/Wind Animation.mp4',
-]
+const videoSources = computed(() =>
+  props.content.dashboardFeatures.map(feature => feature.video || ''),
+)
 
 const videoRefs = ref<HTMLVideoElement[]>([])
 
 const activeVideoIndex = computed(() => {
-  if (activeIndex.value >= 0) return activeIndex.value
+  if (activeIndex.value >= 0)
+    return activeIndex.value
   return currentSegment.value
 })
 
@@ -44,10 +41,6 @@ let lastTimestamp: number | null = null
 const SEGMENT_DURATION = 3000
 const nodeCount = props.content.dashboardFeatures.length
 const segmentCount = nodeCount
-
-function getNodeCalcPosition(index: number) {
-  return `calc(${index} * (100% + 2rem) / 5)`
-}
 
 function getProgressWidth() {
   const seg = currentSegment.value
@@ -108,15 +101,8 @@ onUnmounted(() => {
     cancelAnimationFrame(animationFrame)
 })
 
-function getIconPath(type: string) {
-  switch (type) {
-    case 'wind': return 'M4 17v2a2 2 0 102 2 2 2 0 00-2-2zm0-2h12a2 2 0 10-2-2 2 2 0 002 2 6 6 0 01-6 6H4a4 4 0 01-4-4 4 4 0 014-4zm-2-5a2 2 0 110-4h14a2 2 0 10-2-2 2 2 0 002 2 6 6 0 01-6 6H2z'
-    case 'lightning-bolt': return 'M7 2v11h3v9l7-12h-4l4-8z'
-    case 'adjustments': return 'M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z'
-    case 'chart-pie': return 'M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z'
-    case 'trending-up': return 'M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z'
-    default: return ''
-  }
+function isAssetUrl(value: string) {
+  return value.startsWith('/') || value.startsWith('http://') || value.startsWith('https://')
 }
 
 function isNodeReached(index: number) {
@@ -161,11 +147,13 @@ function isNodeReached(index: number) {
           @click="handleFeatureClick(index)"
         >
           <div class="flex items-start gap-3 mb-4">
-            <div class="w-10 h-10 min-w-[40px] bg-white/5 border border-white/10 rounded-lg flex items-center justify-center text-white/70">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path :d="getIconPath(feature.icon)" />
-              </svg>
-            </div>
+            <img
+              v-if="isAssetUrl(feature.icon)"
+              :src="feature.icon"
+              :alt="feature.title"
+              class="w-9 h-9 object-contain"
+            >
+
             <h3
               class="text-sm font-semibold leading-tight whitespace-pre-line transition-colors" :class="[
                 activeIndex === index ? 'text-white' : 'text-white/80',

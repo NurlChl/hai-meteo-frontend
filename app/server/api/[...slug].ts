@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
 
     return response._data
   }
-  catch (error) {
+  catch {
     throw createError({
       statusCode: 500,
       statusMessage: 'Backend API Error',

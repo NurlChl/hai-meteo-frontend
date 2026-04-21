@@ -15,7 +15,6 @@ defineProps<Props>()
 
 <template>
   <section class="relative bg-bg-primary overflow-hidden">
-    <!-- Background image (partnership-style, top-right corner) -->
     <div class="absolute top-0 right-0 h-full pointer-events-none z-0">
       <img
         src="/images/partnership/BackgroundSectionOne.png"
@@ -26,7 +25,6 @@ defineProps<Props>()
 
     <div class="relative z-10 mx-auto max-w-[1440px] px-6 md:px-12 lg:px-[120px] py-16 md:py-20 lg:py-[100px]">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        <!-- Left: Text content -->
         <div class="flex flex-col gap-6">
           <h1 class="text-3xl md:text-4xl lg:text-[44px] lg:leading-[54px] font-bold text-white tracking-[-0.5px]">
             {{ title }}
@@ -43,7 +41,6 @@ defineProps<Props>()
           </div>
         </div>
 
-        <!-- Right: Cover image -->
         <div class="relative flex justify-center lg:justify-end">
           <div class="relative w-full max-w-[520px] aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/5">
             <img

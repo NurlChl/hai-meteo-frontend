@@ -123,8 +123,9 @@ onMounted(() => {
 
           <FormDynamicJson
             v-model="form.content"
+            :section-key="form.sectionKey"
             label="Content"
-            helper-text="Build your section content dynamically - add key-value pairs or lists"
+            helper-text="Build your section content from the section schema"
           />
 
           <div class="flex items-center gap-3 px-1">

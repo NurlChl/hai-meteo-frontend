@@ -5,7 +5,7 @@ interface Props {
   content: LandingSectionSevenContent
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 const router = useRouter()
 const email = ref('')
 
@@ -19,7 +19,6 @@ function handleRequestDemo() {
 
 <template>
   <section class="relative w-full py-20 lg:py-32 px-6 md:px-12 lg:px-[120px] bg-bg-primary overflow-hidden">
-    <!-- Background Image -->
     <div class="absolute top-0 right-0 h-full w-full pointer-events-none z-0">
       <img
         v-if="content.backgroundImage"
@@ -27,11 +26,15 @@ function handleRequestDemo() {
         :alt="content.backgroundImage.alt"
         class="absolute top-0 right-0 h-full object-cover opacity-50 lg:opacity-100"
       >
-      <img src="/images/landing/line.png" alt="Decorative line" class="absolute bottom-0 right-0 max-w-[50%] lg:max-w-full object-contain">
+      <img
+        v-if="content.lineImage?.url"
+        :src="content.lineImage.url"
+        :alt="content.lineImage.alt"
+        class="absolute bottom-0 right-0 max-w-[50%] lg:max-w-full object-contain"
+      >
     </div>
 
     <div class="max-w-[1440px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-10 relative">
-      <!-- Left Column: Content -->
       <div class="relative flex flex-col justify-start items-start gap-7 max-w-xl z-10">
         <h2 class="self-stretch text-white text-4xl md:text-5xl lg:text-6xl font-medium font-['Inter'] leading-tight lg:leading-[68px] whitespace-pre-line">
           {{ content.title }}
@@ -75,18 +78,17 @@ function handleRequestDemo() {
         </div>
       </div>
 
-      <!-- Right Column: Video -->
       <div class="relative w-full max-w-[600px] lg:max-w-[530px] flex justify-center lg:justify-end">
-        <!-- Video Content -->
         <div class="relative w-full aspect-square md:aspect-video lg:aspect-square flex items-center justify-center">
           <video
+            v-if="content.demoVideo"
             autoplay
             loop
             muted
             playsinline
             class="w-full h-full object-contain mix-blend-screen"
           >
-            <source src="/video/strom.mp4" type="video/mp4" />
+            <source :src="content.demoVideo" type="video/mp4">
           </video>
         </div>
       </div>

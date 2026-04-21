@@ -16,17 +16,10 @@ const props = defineProps<Props>()
 const activeHeadingId = ref('')
 const contentRef = ref<HTMLElement | null>(null)
 
-/**
- * Process the HTML content:
- * - Inject IDs on headings so the TOC can link to them.
- *
- * The `contentMd` field actually stores HTML from the Tiptap WYSIWYG editor,
- * despite its name. We process it directly as HTML.
- */
 const renderedHtml = computed(() => {
-  if (!props.contentMd) return ''
+  if (!props.contentMd)
+    return ''
 
-  // Inject IDs into heading tags for TOC anchoring
   return props.contentMd.replace(
     /<h([1-3])([^>]*)>(.*?)<\/h[1-3]>/gi,
     (_match, level, attrs, text) => {
@@ -42,11 +35,9 @@ const renderedHtml = computed(() => {
   )
 })
 
-/**
- * Extract headings from the HTML content to build a table of contents.
- */
 const tocItems = computed<TocItem[]>(() => {
-  if (!props.contentMd) return []
+  if (!props.contentMd)
+    return []
 
   const headingRegex = /<h([1-3])[^>]*>(.*?)<\/h[1-3]>/gi
   const items: TocItem[] = []
@@ -55,7 +46,7 @@ const tocItems = computed<TocItem[]>(() => {
   while (match !== null) {
     const level = Number(match[1] ?? '2')
     const rawText = match[2] ?? ''
-    // Strip inner HTML tags to get plain text
+
     const text = rawText.replace(/<[^>]*>/g, '').trim()
     const id = text
       .toLowerCase()
@@ -73,19 +64,17 @@ const tocItems = computed<TocItem[]>(() => {
   return items
 })
 
-/**
- * Set up IntersectionObserver to track which heading is currently active
- * for the table of contents highlighting.
- */
 onMounted(() => {
-  if (!contentRef.value) return
+  if (!contentRef.value)
+    return
 
   const headings = contentRef.value.querySelectorAll('h1, h2, h3')
-  if (headings.length === 0) return
+  if (headings.length === 0)
+    return
 
-  // Set the first heading as active by default
   const firstId = headings[0]?.getAttribute('id')
-  if (firstId) activeHeadingId.value = firstId
+  if (firstId)
+    activeHeadingId.value = firstId
 
   const observer = new IntersectionObserver(
     (entries) => {
@@ -118,10 +107,8 @@ function scrollToHeading(id: string) {
   <section class="bg-bg-primary min-h-screen">
     <div class="mx-auto max-w-[1440px] px-6 md:px-12 lg:px-[120px] py-12 md:py-16 lg:py-20">
       <div class="flex flex-col lg:flex-row gap-10 lg:gap-16">
-        <!-- Left Sidebar -->
         <aside class="lg:w-[220px] lg:shrink-0">
           <div class="lg:sticky lg:top-24 flex flex-col gap-6">
-            <!-- Back link -->
             <NuxtLink
               to="/blog"
               class="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-white transition-colors group"
@@ -132,7 +119,6 @@ function scrollToHeading(id: string) {
               Back to Articles
             </NuxtLink>
 
-            <!-- Table of Contents -->
             <div v-if="tocItems.length > 0">
               <div class="flex items-center gap-2 text-sm text-white/60 mb-4">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,7 +147,6 @@ function scrollToHeading(id: string) {
           </div>
         </aside>
 
-        <!-- Right: Main Content -->
         <article
           ref="contentRef"
           class="flex-1 min-w-0 blog-prose"
@@ -173,7 +158,6 @@ function scrollToHeading(id: string) {
 </template>
 
 <style scoped>
-/* Prose styling for rendered HTML content */
 .blog-prose :deep(h1) {
   font-size: 2rem;
   font-weight: 700;
@@ -322,7 +306,6 @@ function scrollToHeading(id: string) {
   font-style: italic;
 }
 
-/* First child heading should have no top margin */
 .blog-prose :deep(> :first-child) {
   margin-top: 0;
 }

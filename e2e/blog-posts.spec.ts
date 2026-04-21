@@ -14,8 +14,8 @@ test.describe('Blog Posts Management', () => {
   test('should create a blog post with categories and tags', async ({ page }) => {
     page.on('response', async (response) => {
       if (!response.ok() && (response.url().includes('/blog-categories') || response.url().includes('/blog-tags'))) {
-        console.log('FAILED REQUEST:', response.url(), response.status())
-        console.log('RESPONSE:', await response.text())
+        console.error('FAILED REQUEST:', response.url(), response.status())
+        console.error('RESPONSE:', await response.text())
       }
     })
 
@@ -138,7 +138,7 @@ test.describe('Blog Posts Management', () => {
     const category1 = `Category A ${timestamp}`
     const category2 = `Category B ${timestamp}`
 
-    for (const [index, categoryName] of [category1, category2].entries()) {
+    for (const categoryName of [category1, category2]) {
       await page.goto('/admin/blog/categories')
       await page.locator('a[href="/admin/blog/categories/create"]').click()
       await page.waitForLoadState('networkidle')
@@ -152,7 +152,7 @@ test.describe('Blog Posts Management', () => {
     const tag1 = `Tag A ${timestamp}`
     const tag2 = `Tag B ${timestamp}`
 
-    for (const [index, tagName] of [tag1, tag2].entries()) {
+    for (const tagName of [tag1, tag2]) {
       await page.goto('/admin/blog/tags')
       await page.locator('a[href="/admin/blog/tags/create"]').click()
       await page.waitForLoadState('networkidle')

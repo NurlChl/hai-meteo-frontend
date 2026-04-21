@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { FetchError } from '~/types'
+import { getMediaFilename } from '~/utils/mediaFilename'
+
 interface MediaAsset {
   id: number
   fileUrl: string
@@ -35,6 +38,11 @@ const toast = useToast()
 const selectedMedia = ref<MediaAsset | null>(null)
 const uploading = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
+
+function getUploadErrorMessage(error: unknown, fallback: string): string {
+  const fetchError = error as FetchError
+  return fetchError.data?.message || fetchError.message || fallback
+}
 
 async function loadSelectedMedia() {
   if (!props.modelValue) {
@@ -78,7 +86,7 @@ async function handleFileSelect(event: Event) {
   }
   catch (err) {
     console.error('Failed to upload:', err)
-    toast.error('Failed to upload image')
+    toast.error(getUploadErrorMessage(err, 'Failed to upload image'))
   }
   finally {
     uploading.value = false
@@ -123,7 +131,7 @@ watch(() => props.modelValue, loadSelectedMedia, { immediate: true })
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium text-text-primary truncate">
-            {{ selectedMedia.fileUrl.split('/').pop() }}
+            {{ getMediaFilename(selectedMedia.fileUrl) }}
           </p>
           <p class="text-xs text-text-muted mt-1">
             {{ selectedMedia.mimeType }}

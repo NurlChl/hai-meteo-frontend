@@ -39,6 +39,7 @@ interface ApiBlogPostDetail extends ApiBlogPost {
 
 const { get } = useApi()
 const config = useRuntimeConfig()
+const { resolveMediaUrl } = useMediaUrl()
 const coverImageCache = new Map<number, Promise<BlogImage | null>>()
 
 const sections = ref<BlogSectionsData>(cloneDefaults())
@@ -103,27 +104,6 @@ function formatDate(value: string | null): string {
     day: 'numeric',
     year: 'numeric',
   }).format(date)
-}
-
-function resolveMediaUrl(fileUrl: string): string {
-  if (!fileUrl) {
-    return ''
-  }
-
-  try {
-    const apiUrl = new URL(config.public.apiBase as string)
-    const backendOrigin = apiUrl.origin
-
-    if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
-      const parsed = new URL(fileUrl)
-      return `${backendOrigin}${parsed.pathname}`
-    }
-
-    return `${backendOrigin}${fileUrl}`
-  }
-  catch {
-    return fileUrl
-  }
 }
 
 async function resolveImage(value: unknown, fallback: BlogImage): Promise<BlogImage> {

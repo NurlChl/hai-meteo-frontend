@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { BlogPost as ApiBlogPost, MediaAsset } from '~/types/models'
 import type { BlogPost } from '~/data/blogDefaults'
+import type { BlogPost as ApiBlogPost, MediaAsset } from '~/types/models'
 import DetailContent from '~/components/blog/DetailContent.vue'
 import DetailCta from '~/components/blog/DetailCta.vue'
 import DetailHero from '~/components/blog/DetailHero.vue'
@@ -33,13 +33,12 @@ const relatedPosts = ref<BlogPost[]>([])
 const isLoading = ref(true)
 const hasError = ref(false)
 
-/**
- * Format an ISO date string to a readable format (e.g. "October 15, 2025").
- */
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return ''
+  if (!dateStr)
+    return ''
   const date = new Date(dateStr)
-  if (Number.isNaN(date.getTime())) return ''
+  if (Number.isNaN(date.getTime()))
+    return ''
   return new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
@@ -47,11 +46,9 @@ function formatDate(dateStr: string | null): string {
   }).format(date)
 }
 
-/**
- * Resolve cover image from the media asset endpoint.
- */
 async function loadCoverImage(mediaId: number | null): Promise<void> {
-  if (!mediaId) return
+  if (!mediaId)
+    return
   try {
     const media = await get<MediaAsset>(`/media-assets/${mediaId}`)
     if (media?.fileUrl) {
@@ -60,15 +57,13 @@ async function loadCoverImage(mediaId: number | null): Promise<void> {
     }
   }
   catch {
-    // Silently fail — use placeholder
+
   }
 }
 
-/**
- * Resolve a single cover image by media ID, returning a BlogImage or fallback.
- */
 async function resolveCoverImage(mediaId: number | null): Promise<{ url: string, alt: string }> {
-  if (!mediaId) return { url: '/images/blog/BackgroundSectionOne.png', alt: 'Blog image' }
+  if (!mediaId)
+    return { url: '/images/blog/BackgroundSectionOne.png', alt: 'Blog image' }
   try {
     const media = await get<MediaAsset>(`/media-assets/${mediaId}`)
     if (media?.fileUrl) {
@@ -76,14 +71,11 @@ async function resolveCoverImage(mediaId: number | null): Promise<{ url: string,
     }
   }
   catch {
-    // fallback
+
   }
   return { url: '/images/blog/BackgroundSectionOne.png', alt: 'Blog image' }
 }
 
-/**
- * Load related blog posts (other published posts excluding the current one).
- */
 async function loadRelatedPosts(): Promise<void> {
   try {
     const response = await get<{ results: ApiBlogPost[] }>('/blog-posts', {
@@ -113,9 +105,6 @@ async function loadRelatedPosts(): Promise<void> {
   }
 }
 
-/**
- * Load the blog post data from the backend.
- */
 async function loadBlogPost(): Promise<void> {
   if (!blogPostId.value) {
     hasError.value = true
@@ -147,9 +136,6 @@ async function loadBlogPost(): Promise<void> {
 
 await loadBlogPost()
 
-/**
- * SEO: Set page title and meta description from post data.
- */
 useHead(computed(() => {
   if (!post.value) {
     return {
@@ -171,7 +157,6 @@ useHead(computed(() => {
 <template>
   <LandingLayout>
     <main>
-      <!-- Loading state -->
       <div v-if="isLoading" class="min-h-screen bg-bg-primary flex items-center justify-center">
         <div class="flex flex-col items-center gap-4">
           <div class="w-8 h-8 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />
@@ -179,11 +164,14 @@ useHead(computed(() => {
         </div>
       </div>
 
-      <!-- Error state -->
       <div v-else-if="hasError || !post" class="min-h-screen bg-bg-primary flex items-center justify-center">
         <div class="text-center max-w-md mx-auto px-6">
-          <div class="text-6xl mb-4 opacity-30">📰</div>
-          <h1 class="text-2xl font-semibold text-white mb-3">Article Not Found</h1>
+          <div class="text-6xl mb-4 opacity-30">
+            📰
+          </div>
+          <h1 class="text-2xl font-semibold text-white mb-3">
+            Article Not Found
+          </h1>
           <p class="text-text-secondary mb-6">
             The blog post you're looking for doesn't exist or has been removed.
           </p>
@@ -199,7 +187,6 @@ useHead(computed(() => {
         </div>
       </div>
 
-      <!-- Blog detail content -->
       <template v-else>
         <DetailHero
           :title="post.title"

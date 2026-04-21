@@ -16,7 +16,6 @@ const {
   resetChat,
 } = useAskMeteo()
 
-// --- Quick Action Questions ---
 const DEFAULT_QUICK_QUESTIONS = [
   'Saya ingin tau apa itu HAI-Meteo',
   'Saya bingung harus kontak ke mana',
@@ -40,7 +39,6 @@ async function loadQuickQuestions() {
     }
   }
   catch {
-    // silently fallback to defaults
   }
 }
 
@@ -57,7 +55,8 @@ function close() {
 }
 
 async function handleSend() {
-  if (!canSend.value) return
+  if (!canSend.value)
+    return
   const question = userInput.value.trim()
   userInput.value = ''
   await sendMessage(question)
@@ -65,7 +64,8 @@ async function handleSend() {
 }
 
 async function handleQuickAction(text: string) {
-  if (isLoading.value || isRateLimited.value) return
+  if (isLoading.value || isRateLimited.value)
+    return
   await sendMessage(text)
   scrollToBottom()
 }
@@ -85,7 +85,6 @@ function scrollToBottom() {
   })
 }
 
-// Watch for new messages and scroll
 watch(messages, () => scrollToBottom(), { deep: true })
 
 onMounted(() => {
@@ -95,43 +94,40 @@ onMounted(() => {
 
 <template>
   <div v-if="!isAdminRoute" class="ask-meteo-widget">
-    <!-- Floating Button -->
     <Transition name="fab">
       <button
         v-if="!isOpen"
         class="ask-meteo-fab"
-        @click="toggle"
         aria-label="Ask Meteo"
+        @click="toggle"
       >
         <span class="fab-logo">
           <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M-3.24323 26.7025V19.1231C6.23502 19.1231 12.9189 3.78381 17.5676 3.78381C25.027 3.78381 15.7297 18.1622 16.9189 18.1622C18.3243 18.1622 21.0001 13.0001 25.0001 13.0001C28.5001 13.0001 25.0001 19.0001 28.0001 19.0001C32.419 19.0001 35.6216 14.9717 35.6216 8.54036H37.3514C37.3514 15.4461 32.5949 23.8919 25.027 23.8919C20.4865 23.8919 25.5001 15.5001 24.0001 15.5001C22.0001 15.5001 17.01 24.5 13.5001 24.5C5.75905 24.5 21.419 8.00012 18.5001 8.00012C15.5811 8.00012 6.44963 26.7025 -3.24323 26.7025Z" fill="white"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M-3.24323 26.7025V19.1231C6.23502 19.1231 12.9189 3.78381 17.5676 3.78381C25.027 3.78381 15.7297 18.1622 16.9189 18.1622C18.3243 18.1622 21.0001 13.0001 25.0001 13.0001C28.5001 13.0001 25.0001 19.0001 28.0001 19.0001C32.419 19.0001 35.6216 14.9717 35.6216 8.54036H37.3514C37.3514 15.4461 32.5949 23.8919 25.027 23.8919C20.4865 23.8919 25.5001 15.5001 24.0001 15.5001C22.0001 15.5001 17.01 24.5 13.5001 24.5C5.75905 24.5 21.419 8.00012 18.5001 8.00012C15.5811 8.00012 6.44963 26.7025 -3.24323 26.7025Z" fill="white" />
           </svg>
         </span>
         <span class="fab-text">Ask Meteo</span>
       </button>
     </Transition>
 
-    <!-- Chat Panel -->
     <Transition name="chat-panel">
       <div v-if="isOpen" class="chat-panel">
-        <!-- Header -->
         <div class="chat-header">
           <span class="chat-header-title">Meteo Assistant</span>
           <div class="chat-header-actions">
             <button
               v-if="messages.length > 0"
               class="chat-header-btn"
-              @click="resetChat"
               aria-label="New Chat"
               title="Mulai chat baru"
+              @click="resetChat"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="1 4 1 10 7 10" />
                 <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
               </svg>
             </button>
-            <button class="chat-header-btn" @click="close" aria-label="Close">
+            <button class="chat-header-btn" aria-label="Close" @click="close">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
@@ -139,22 +135,23 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Body -->
         <div ref="chatBodyRef" class="chat-body">
-          <!-- Greeting (shown when no messages) -->
           <template v-if="messages.length === 0">
             <div class="chat-greeting">
               <div class="chat-logo">
                 <svg width="36" height="36" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="32" height="32" rx="8" fill="#007AFF"/>
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M-3.24323 26.7025V19.1231C6.23502 19.1231 12.9189 3.78381 17.5676 3.78381C25.027 3.78381 15.7297 18.1622 16.9189 18.1622C18.3243 18.1622 21.0001 13.0001 25.0001 13.0001C28.5001 13.0001 25.0001 19.0001 28.0001 19.0001C32.419 19.0001 35.6216 14.9717 35.6216 8.54036H37.3514C37.3514 15.4461 32.5949 23.8919 25.027 23.8919C20.4865 23.8919 25.5001 15.5001 24.0001 15.5001C22.0001 15.5001 17.01 24.5 13.5001 24.5C5.75905 24.5 21.419 8.00012 18.5001 8.00012C15.5811 8.00012 6.44963 26.7025 -3.24323 26.7025Z" fill="white"/>
+                  <rect width="32" height="32" rx="8" fill="#007AFF" />
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M-3.24323 26.7025V19.1231C6.23502 19.1231 12.9189 3.78381 17.5676 3.78381C25.027 3.78381 15.7297 18.1622 16.9189 18.1622C18.3243 18.1622 21.0001 13.0001 25.0001 13.0001C28.5001 13.0001 25.0001 19.0001 28.0001 19.0001C32.419 19.0001 35.6216 14.9717 35.6216 8.54036H37.3514C37.3514 15.4461 32.5949 23.8919 25.027 23.8919C20.4865 23.8919 25.5001 15.5001 24.0001 15.5001C22.0001 15.5001 17.01 24.5 13.5001 24.5C5.75905 24.5 21.419 8.00012 18.5001 8.00012C15.5811 8.00012 6.44963 26.7025 -3.24323 26.7025Z" fill="white" />
                 </svg>
               </div>
-              <h3 class="chat-greeting-title">HAI-Meteo 👋</h3>
-              <p class="chat-greeting-subtitle">How can I assist you today?</p>
+              <h3 class="chat-greeting-title">
+                HAI-Meteo 👋
+              </h3>
+              <p class="chat-greeting-subtitle">
+                How can I assist you today?
+              </p>
             </div>
 
-            <!-- Quick Actions -->
             <div class="chat-actions">
               <button
                 v-for="q in quickQuestions"
@@ -173,7 +170,6 @@ onMounted(() => {
             </div>
           </template>
 
-          <!-- Messages -->
           <template v-else>
             <div class="chat-messages">
               <div
@@ -182,17 +178,17 @@ onMounted(() => {
                 class="chat-message"
                 :class="msg.role === 'user' ? 'chat-message--user' : 'chat-message--assistant'"
               >
-                <!-- Assistant avatar -->
                 <div v-if="msg.role === 'assistant'" class="chat-message-avatar">
                   <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="32" height="32" rx="8" fill="#007AFF"/>
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M-3.24323 26.7025V19.1231C6.23502 19.1231 12.9189 3.78381 17.5676 3.78381C25.027 3.78381 15.7297 18.1622 16.9189 18.1622C18.3243 18.1622 21.0001 13.0001 25.0001 13.0001C28.5001 13.0001 25.0001 19.0001 28.0001 19.0001C32.419 19.0001 35.6216 14.9717 35.6216 8.54036H37.3514C37.3514 15.4461 32.5949 23.8919 25.027 23.8919C20.4865 23.8919 25.5001 15.5001 24.0001 15.5001C22.0001 15.5001 17.01 24.5 13.5001 24.5C5.75905 24.5 21.419 8.00012 18.5001 8.00012C15.5811 8.00012 6.44963 26.7025 -3.24323 26.7025Z" fill="white"/>
+                    <rect width="32" height="32" rx="8" fill="#007AFF" />
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M-3.24323 26.7025V19.1231C6.23502 19.1231 12.9189 3.78381 17.5676 3.78381C25.027 3.78381 15.7297 18.1622 16.9189 18.1622C18.3243 18.1622 21.0001 13.0001 25.0001 13.0001C28.5001 13.0001 25.0001 19.0001 28.0001 19.0001C32.419 19.0001 35.6216 14.9717 35.6216 8.54036H37.3514C37.3514 15.4461 32.5949 23.8919 25.027 23.8919C20.4865 23.8919 25.5001 15.5001 24.0001 15.5001C22.0001 15.5001 17.01 24.5 13.5001 24.5C5.75905 24.5 21.419 8.00012 18.5001 8.00012C15.5811 8.00012 6.44963 26.7025 -3.24323 26.7025Z" fill="white" />
                   </svg>
                 </div>
                 <div class="chat-message-bubble">
-                  <p v-if="msg.role === 'user'" class="chat-message-text">{{ msg.text }}</p>
-                  <div v-else class="chat-message-text chat-message-html" v-html="msg.text"></div>
-                  <!-- WhatsApp Button -->
+                  <p v-if="msg.role === 'user'" class="chat-message-text">
+                    {{ msg.text }}
+                  </p>
+                  <div v-else class="chat-message-text chat-message-html" v-html="msg.text" />
                   <a
                     v-if="msg.showWhatsAppButton && msg.whatsAppUrl"
                     :href="msg.whatsAppUrl"
@@ -201,26 +197,25 @@ onMounted(() => {
                     class="chat-whatsapp-btn"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                     </svg>
                     <span>Hubungi via WhatsApp</span>
                   </a>
                 </div>
               </div>
 
-              <!-- Typing Indicator -->
               <div v-if="isLoading" class="chat-message chat-message--assistant">
                 <div class="chat-message-avatar">
                   <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="32" height="32" rx="8" fill="#007AFF"/>
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M-3.24323 26.7025V19.1231C6.23502 19.1231 12.9189 3.78381 17.5676 3.78381C25.027 3.78381 15.7297 18.1622 16.9189 18.1622C18.3243 18.1622 21.0001 13.0001 25.0001 13.0001C28.5001 13.0001 25.0001 19.0001 28.0001 19.0001C32.419 19.0001 35.6216 14.9717 35.6216 8.54036H37.3514C37.3514 15.4461 32.5949 23.8919 25.027 23.8919C20.4865 23.8919 25.5001 15.5001 24.0001 15.5001C22.0001 15.5001 17.01 24.5 13.5001 24.5C5.75905 24.5 21.419 8.00012 18.5001 8.00012C15.5811 8.00012 6.44963 26.7025 -3.24323 26.7025Z" fill="white"/>
+                    <rect width="32" height="32" rx="8" fill="#007AFF" />
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M-3.24323 26.7025V19.1231C6.23502 19.1231 12.9189 3.78381 17.5676 3.78381C25.027 3.78381 15.7297 18.1622 16.9189 18.1622C18.3243 18.1622 21.0001 13.0001 25.0001 13.0001C28.5001 13.0001 25.0001 19.0001 28.0001 19.0001C32.419 19.0001 35.6216 14.9717 35.6216 8.54036H37.3514C37.3514 15.4461 32.5949 23.8919 25.027 23.8919C20.4865 23.8919 25.5001 15.5001 24.0001 15.5001C22.0001 15.5001 17.01 24.5 13.5001 24.5C5.75905 24.5 21.419 8.00012 18.5001 8.00012C15.5811 8.00012 6.44963 26.7025 -3.24323 26.7025Z" fill="white" />
                   </svg>
                 </div>
                 <div class="chat-message-bubble chat-typing-bubble">
                   <div class="chat-typing-indicator">
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
+                    <span class="dot" />
+                    <span class="dot" />
+                    <span class="dot" />
                   </div>
                 </div>
               </div>
@@ -228,9 +223,7 @@ onMounted(() => {
           </template>
         </div>
 
-        <!-- Input Area -->
         <div class="chat-input-area">
-          <!-- Rate limit warning -->
           <div v-if="isRateLimited" class="chat-rate-limit-warning">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10" />
@@ -256,11 +249,13 @@ onMounted(() => {
               @click="handleSend"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
               </svg>
             </button>
           </div>
-          <p class="chat-footer-text">Butuh info lebih lanjut hubungi kontak CS.</p>
+          <p class="chat-footer-text">
+            Butuh info lebih lanjut hubungi kontak CS.
+          </p>
         </div>
       </div>
     </Transition>
@@ -268,9 +263,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* ============================================
-   FLOATING ACTION BUTTON
-   ============================================ */
 .ask-meteo-widget {
   position: fixed;
   bottom: 28px;
@@ -327,9 +319,6 @@ onMounted(() => {
   line-height: 1;
 }
 
-/* ============================================
-   CHAT PANEL
-   ============================================ */
 .chat-panel {
   position: absolute;
   bottom: 0;
@@ -347,7 +336,6 @@ onMounted(() => {
   overflow: hidden;
 }
 
-/* Header */
 .chat-header {
   display: flex;
   align-items: center;
@@ -389,7 +377,6 @@ onMounted(() => {
   color: #333;
 }
 
-/* Body */
 .chat-body {
   flex: 1;
   overflow-y: auto;
@@ -399,7 +386,6 @@ onMounted(() => {
   scroll-behavior: smooth;
 }
 
-/* Greeting */
 .chat-greeting {
   display: flex;
   flex-direction: column;
@@ -435,7 +421,6 @@ onMounted(() => {
   font-weight: 400;
 }
 
-/* Quick Actions */
 .chat-actions {
   display: flex;
   flex-direction: column;
@@ -481,9 +466,6 @@ onMounted(() => {
   color: #007AFF;
 }
 
-/* ============================================
-   MESSAGES
-   ============================================ */
 .chat-messages {
   display: flex;
   flex-direction: column;
@@ -550,7 +532,6 @@ onMounted(() => {
   word-break: break-word;
 }
 
-/* HTML content from API responses */
 .chat-message-html {
   white-space: normal;
 }
@@ -580,7 +561,6 @@ onMounted(() => {
   margin: 4px 0;
 }
 
-/* WhatsApp Button */
 .chat-whatsapp-btn {
   display: inline-flex;
   align-items: center;
@@ -602,7 +582,6 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
 }
 
-/* Typing Indicator */
 .chat-typing-bubble {
   display: flex;
   align-items: center;
@@ -642,16 +621,12 @@ onMounted(() => {
   }
 }
 
-/* ============================================
-   INPUT AREA
-   ============================================ */
 .chat-input-area {
   padding: 12px 22px 18px;
   border-top: 1px solid #f0f0f0;
   background: #fafafa;
 }
 
-/* Rate Limit Warning */
 .chat-rate-limit-warning {
   display: flex;
   align-items: center;
@@ -746,11 +721,6 @@ onMounted(() => {
   font-weight: 400;
 }
 
-/* ============================================
-   TRANSITIONS
-   ============================================ */
-
-/* FAB enter/leave */
 .fab-enter-active {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -769,7 +739,6 @@ onMounted(() => {
   transform: scale(0.8) translateY(10px);
 }
 
-/* Chat panel enter/leave */
 .chat-panel-enter-active {
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -788,9 +757,6 @@ onMounted(() => {
   transform: translateY(20px) scale(0.95);
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
 @media (max-width: 440px) {
   .ask-meteo-widget {
     bottom: 16px;

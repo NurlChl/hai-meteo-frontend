@@ -2,12 +2,13 @@
 import type { LandingSectionFourContent } from '~/data/landingDefaults'
 import { BarChart3, Database, Signal } from 'lucide-vue-next'
 import { defineAsyncComponent } from 'vue'
+import { landingSectionFourAnimationFile } from '~/data/landingDefaults'
 
 interface Props {
   content: LandingSectionFourContent
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const Vue3Lottie = defineAsyncComponent(() => import('vue3-lottie').then(module => module.Vue3Lottie))
 
@@ -21,52 +22,46 @@ function getIcon(iconName: string) {
   return iconMap[iconName] || Signal
 }
 
+function isAssetUrl(value: string) {
+  return value.startsWith('/') || value.startsWith('http://') || value.startsWith('https://')
+}
 </script>
 
 <template>
   <section class="py-16 md:py-24 px-6 md:px-12 lg:px-[120px] bg-[#020515] text-white overflow-hidden relative font-['Inter']">
-    <!-- Background Glow -->
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-blue-900/10 blur-[120px] rounded-full pointer-events-none" />
 
     <div class="max-w-[1110px] mx-auto flex flex-col items-center gap-20 relative z-10">
-      <!-- Radar Visualization -->
       <div class="flex flex-col items-center w-full">
-        <!-- Radar + Line + Logo wrapper -->
         <div class="relative w-full max-w-[1200px]">
-          <!-- Lottie Background Animation -->
           <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-0 pointer-events-none w-[1100px] h-[1100px] flex items-center justify-center overflow-hidden">
             <ClientOnly>
-              <Vue3Lottie animation-link="/video/Flow 6.json" :height="1100" :width="1100" />
+              <Vue3Lottie :animation-link="landingSectionFourAnimationFile" :height="1100" :width="1100" />
             </ClientOnly>
-            
-            <!-- Blur and fade overlay for the bottom half -->
+
             <div class="absolute bottom-0 left-0 w-full h-1/2 z-10 pointer-events-none">
-              <div class="absolute inset-0 backdrop-blur-[12px] [mask-image:linear-gradient(to_bottom,transparent_0%,black_30%,black_100%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_30%,black_100%)]"></div>
-              <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#020515]/90 to-[#020515]"></div>
+              <div class="absolute inset-0 backdrop-blur-[12px] [mask-image:linear-gradient(to_bottom,transparent_0%,black_30%,black_100%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_30%,black_100%)]" />
+              <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#020515]/90 to-[#020515]" />
             </div>
           </div>
 
-          <!-- Semi-circle container -->
           <div class="relative z-10 w-full overflow-hidden flex justify-center items-end" style="padding-bottom: 50%;">
-            <!-- Radar SVG Asset -->
-            <img 
-              src="/images/landing/radar-half.svg" 
-              class="absolute left-1/2 -translate-x-1/2 w-[100%] max-w-none h-auto" 
+            <img
+              v-if="content.radarImage?.url"
+              :src="content.radarImage.url"
+              class="absolute left-1/2 -translate-x-1/2 w-[100%] max-w-none h-auto"
               style="top: 2.5%;"
-              alt="Weather Radar Graphic"
-            />
+              :alt="content.radarImage.alt"
+            >
           </div>
 
-          <!-- Horizontal Glowing Line -->
           <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[100vw] z-20 flex items-center justify-center translate-y-1/2">
             <div class="w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-80" />
             <div class="w-3/4 h-[4px] bg-gradient-to-r from-transparent via-blue-600 to-transparent blur-[2px] absolute pointer-events-none" />
             <div class="w-1/2 h-[12px] bg-gradient-to-r from-transparent via-blue-700/50 to-transparent blur-md absolute pointer-events-none" />
           </div>
 
-          <!-- Center Logo Orb -->
           <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-30 flex items-center justify-center">
-            <!-- Logo orb on top -->
             <div
               class="w-[76px] h-[76px] md:w-[90px] md:h-[90px] relative rounded-full flex items-center justify-center z-20"
               style="box-shadow: 0px 0px 20px 10px rgba(59,130,246,0.3), 0px 0px 50px 20px rgba(59,130,246,0.12);"
@@ -74,18 +69,16 @@ function getIcon(iconName: string) {
               <div class="w-full h-full absolute inset-0 bg-blue-600 rounded-full border border-white/20" />
               <div class="w-[96%] h-[96%] absolute bg-blue-600 rounded-full overflow-hidden flex items-center justify-center">
                 <div class="w-24 h-16 absolute -left-2 top-2 bg-white blur-2xl opacity-35" />
-                <img src="/logo.svg" alt="HAI-Meteo Logo" class="w-full h-full object-cover relative z-10">
+                <img v-if="content.logoImage?.url" :src="content.logoImage.url" :alt="content.logoImage.alt" class="w-full h-full object-cover relative z-10">
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Spacer for logo overflow -->
         <div class="h-16 md:h-20" />
 
-        <!-- Technology Label + Description -->
         <div class="flex flex-col items-center gap-6 mt-2 relative z-30">
-          <div class="text-blue-500 text-2xl font-semibold font-['Poppins'] leading-7">
+          <div class="text-blue-500 text-2xl font-semibold leading-7">
             {{ content.description }}
           </div>
           <div class="max-w-[828px] text-center text-white/90 text-3xl md:text-4xl font-medium leading-[48px]">
@@ -94,12 +87,15 @@ function getIcon(iconName: string) {
         </div>
       </div>
 
-      <!-- Grid Content -->
       <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 text-center relative z-30">
         <div v-for="(tech, index) in content.technologies" :key="index" class="flex flex-col items-center gap-4">
-          <div class="w-20 h-20 relative bg-blue-600/20 rounded-full outline outline-1 outline-offset-[-1px] outline-sky-700 backdrop-blur-xl flex justify-center items-center mb-4">
-            <component :is="getIcon(tech.icon)" class="w-8 h-8 text-white relative z-10" :stroke-width="1.5" />
-          </div>
+          <img
+            v-if="isAssetUrl(tech.icon)"
+            :src="tech.icon"
+            :alt="tech.title"
+            class="w-12 h-12 object-contain relative z-10"
+          >
+          <component :is="getIcon(tech.icon)" v-else class="w-8 h-8 text-white relative z-10" :stroke-width="1.5" />
           <div class="flex flex-col items-center gap-2">
             <h4 class="text-violet-50 text-xl font-medium leading-8">
               {{ tech.title }}
@@ -111,7 +107,6 @@ function getIcon(iconName: string) {
         </div>
       </div>
 
-      <!-- Our Technology Button Wrapper -->
       <div class="relative group z-10 flex justify-center mt-6">
         <div class="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-sky-400 rounded-full blur-md opacity-20 group-hover:opacity-60 transition duration-1000 group-hover:duration-300" />
 

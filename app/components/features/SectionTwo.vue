@@ -19,6 +19,10 @@ function getIconPath(type: string) {
     default: return ''
   }
 }
+
+function isAssetUrl(value: string) {
+  return value.startsWith('/') || value.startsWith('http://') || value.startsWith('https://')
+}
 </script>
 
 <template>
@@ -29,7 +33,6 @@ function getIconPath(type: string) {
       </h2>
 
       <div class="flex flex-col lg:flex-row gap-10 md:gap-12 lg:gap-16">
-        <!-- Accordion/List -->
         <div class="w-full lg:w-5/12 flex flex-col gap-6">
           <div
             v-for="item in content.items"
@@ -40,7 +43,13 @@ function getIconPath(type: string) {
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-4">
                 <div class="w-6 h-6 rounded flex items-center justify-center text-text-secondary">
-                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <img
+                    v-if="isAssetUrl(item.icon)"
+                    :src="item.icon"
+                    :alt="item.title"
+                    class="w-6 h-6 object-contain"
+                  >
+                  <svg v-else class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                     <path :d="getIconPath(item.icon)" />
                   </svg>
                 </div>
@@ -65,8 +74,8 @@ function getIconPath(type: string) {
         </div>
 
         <div class="w-full lg:w-7/12">
-          <div class="relative w-full aspect-[678/441] bg-bg-secondary rounded-2xl border border-white/5 overflow-hidden">
-            <template v-for="item in content.items" :key="'img-' + item.id">
+          <div class="relative w-full aspect-[678/441] bg-bg-secondary overflow-hidden">
+            <template v-for="item in content.items" :key="`img-${item.id}`">
               <transition
                 enter-active-class="transition-opacity duration-500"
                 enter-from-class="opacity-0"
@@ -80,7 +89,7 @@ function getIconPath(type: string) {
                   :src="item.image"
                   :alt="item.title"
                   class="absolute inset-0 w-full h-full object-cover"
-                />
+                >
               </transition>
             </template>
           </div>
