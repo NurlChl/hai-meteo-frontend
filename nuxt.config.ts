@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  modules: ['@pinia/nuxt', '@vueuse/nuxt', '@nuxtjs/tailwindcss', '@nuxt/test-utils/module', 'nuxt-safe-runtime-config', '@nuxt/image'],
+  modules: ['@pinia/nuxt', '@vueuse/nuxt', '@nuxtjs/tailwindcss', 'nuxt-safe-runtime-config', '@nuxt/image'],
 
   app: {
     head: {

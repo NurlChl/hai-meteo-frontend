@@ -34,9 +34,12 @@ function isAssetUrl(value: string) {
     <div class="max-w-[1110px] mx-auto flex flex-col items-center gap-20 relative z-10">
       <div class="flex flex-col items-center w-full">
         <div class="relative w-full max-w-[1200px]">
-          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-0 pointer-events-none w-[1100px] h-[1100px] flex items-center justify-center overflow-hidden">
+          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-0 pointer-events-none w-[320px] h-[320px] sm:w-[520px] sm:h-[520px] md:w-[820px] md:h-[820px] lg:w-[1100px] lg:h-[1100px] flex items-center justify-center overflow-hidden">
             <ClientOnly>
-              <Vue3Lottie :animation-link="landingSectionFourAnimationFile" :height="1100" :width="1100" />
+              <Vue3Lottie
+                :animation-link="landingSectionFourAnimationFile"
+                class="w-full h-full"
+              />
             </ClientOnly>
 
             <div class="absolute bottom-0 left-0 w-full h-1/2 z-10 pointer-events-none">

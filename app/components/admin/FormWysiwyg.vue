@@ -89,6 +89,7 @@ onBeforeUnmount(() => {
 
 function setLink() {
   const previousUrl = editor.value?.getAttributes('link').href
+  // eslint-disable-next-line no-alert
   const url = window.prompt('URL', previousUrl)
 
   if (url === null)
@@ -150,6 +151,7 @@ async function handleImageUpload(event: Event) {
 }
 
 function addImageByUrl() {
+  // eslint-disable-next-line no-alert
   const url = window.prompt('Image URL')
 
   if (url) {
