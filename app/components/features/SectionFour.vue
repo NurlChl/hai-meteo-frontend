@@ -55,6 +55,19 @@ function getProgressWidth() {
   }
 }
 
+function getMobileProgressScale(index: number) {
+  if (activeIndex.value >= 0)
+    return activeIndex.value > index ? 1 : 0
+
+  if (currentSegment.value > index)
+    return 1
+
+  if (currentSegment.value === index)
+    return segmentFraction.value
+
+  return 0
+}
+
 function animate(timestamp: number) {
   if (!lastTimestamp)
     lastTimestamp = timestamp
@@ -143,28 +156,53 @@ function isNodeReached(index: number) {
         <div
           v-for="(feature, index) in content.dashboardFeatures"
           :key="index"
-          class="flex flex-col cursor-pointer group/card"
+          class="relative flex cursor-pointer group/card lg:flex-col"
           @click="handleFeatureClick(index)"
         >
-          <div class="flex items-start gap-3 mb-4">
-            <img
-              v-if="isAssetUrl(feature.icon)"
-              :src="feature.icon"
-              :alt="feature.title"
-              class="w-9 h-9 object-contain"
-            >
-
-            <h3
-              class="text-sm font-semibold leading-tight whitespace-pre-line transition-colors" :class="[
-                activeIndex === index ? 'text-white' : 'text-white/80',
+          <div class="relative mr-4 flex w-4 flex-shrink-0 justify-center lg:hidden">
+            <div
+              v-if="index < content.dashboardFeatures.length - 1"
+              class="absolute left-1/2 top-4 h-[calc(100%+1.5rem)] w-[2px] -translate-x-1/2 bg-white/10"
+            />
+            <div
+              v-if="index < content.dashboardFeatures.length - 1"
+              class="absolute left-1/2 top-4 h-[calc(100%+1.5rem)] w-[2px] -translate-x-1/2 origin-top bg-gradient-to-b from-blue-500 to-blue-400 will-change-transform"
+              :style="{ transform: `scaleY(${getMobileProgressScale(index)})` }"
+            />
+            <button
+              type="button"
+              class="relative z-10 mt-[10px] h-3 w-3 rounded-sm border-2 transition-all duration-300"
+              :class="[
+                isNodeReached(index)
+                  ? 'bg-blue-500 border-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
+                  : 'bg-bg-primary border-white/20',
               ]"
-            >
-              {{ feature.title }}
-            </h3>
+              :aria-label="`Show ${feature.title}`"
+              @click.stop="handleFeatureClick(index)"
+            />
           </div>
-          <p class="text-text-secondary text-xs leading-relaxed">
-            {{ feature.description }}
-          </p>
+
+          <div class="flex flex-1 flex-col">
+            <div class="flex items-start gap-3 mb-4">
+              <img
+                v-if="isAssetUrl(feature.icon)"
+                :src="feature.icon"
+                :alt="feature.title"
+                class="w-9 h-9 object-contain"
+              >
+
+              <h3
+                class="text-sm font-semibold leading-tight whitespace-pre-line transition-colors" :class="[
+                  activeIndex === index ? 'text-white' : 'text-white/80',
+                ]"
+              >
+                {{ feature.title }}
+              </h3>
+            </div>
+            <p class="text-text-secondary text-xs leading-relaxed">
+              {{ feature.description }}
+            </p>
+          </div>
         </div>
       </div>
 

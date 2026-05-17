@@ -116,9 +116,32 @@ const getStarPosition = computed(() => {
           </div>
 
           <div class="flex-1 max-w-[486px] flex flex-col justify-start items-start gap-10">
+            <div data-testid="section-three-mobile-video" class="w-full lg:hidden relative">
+              <div class="absolute w-full h-72 left-1/2 -top-12 -translate-x-1/2 bg-[radial-gradient(ellipse_55.05%_55.05%_at_50.00%_50.00%,_rgba(0,_42,_254,_0)_0%,_rgba(0,_42,_254,_0.5)_100%)] rounded-full blur-3xl pointer-events-none -z-10" />
+              <div class="relative w-full aspect-[612/585] rounded-3xl overflow-hidden">
+                <video
+                  v-if="activeSolution.video"
+                  :key="`mobile-${activeSolution.video}`"
+                  :src="activeSolution.video"
+                  autoplay
+                  loop
+                  muted
+                  playsinline
+                  class="w-full h-full object-cover rounded-3xl border border-white/10"
+                />
+
+                <div class="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-3xl border border-white/10 -z-10">
+                  <span class="text-xl text-gray-600">{{ activeSolution.title }}</span>
+                </div>
+
+                <div class="absolute inset-0 bg-gradient-to-b from-[#020515]/0 to-[#020515] pointer-events-none" />
+              </div>
+            </div>
+
             <div
               v-for="(solution, index) in content.solutions"
               :key="solution.id"
+              :data-testid="`section-three-solution-${solution.id}`"
               class="w-full pl-0 md:pl-4 flex flex-col justify-center items-start gap-2 cursor-pointer transition-all duration-500 ease-in-out"
               :class="{
                 'opacity-100 translate-x-4': activeSolutionIndex === index,
@@ -140,7 +163,7 @@ const getStarPosition = computed(() => {
         </div>
       </div>
 
-      <div class="w-full lg:w-[612px] flex-shrink-0 relative">
+      <div data-testid="section-three-desktop-video" class="hidden lg:block w-full lg:w-[612px] flex-shrink-0 relative">
         <div class="absolute w-[601px] h-96 left-1/2 -top-20 -translate-x-1/2 bg-[radial-gradient(ellipse_55.05%_55.05%_at_50.00%_50.00%,_rgba(0,_42,_254,_0)_0%,_rgba(0,_42,_254,_0.5)_100%)] rounded-full blur-3xl pointer-events-none -z-10" />
         <div class="relative w-full aspect-[612/585] rounded-3xl overflow-hidden">
           <video

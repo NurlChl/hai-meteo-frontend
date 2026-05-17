@@ -73,7 +73,7 @@ function isAssetUrl(value: string) {
           </div>
         </div>
 
-        <div class="w-full lg:w-7/12">
+        <div class="w-full lg:w-7/12 order-first lg:order-none">
           <div class="relative w-full aspect-[678/441] bg-bg-secondary overflow-hidden">
             <template v-for="item in content.items" :key="`img-${item.id}`">
               <transition

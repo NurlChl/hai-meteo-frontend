@@ -40,7 +40,7 @@ function hasSecondaryImage(feature: FeaturesSectionThreeContent['topFeatures'][n
         <div
           v-for="(feature, index) in allFeatures"
           :key="index"
-          class="bg-bg-secondary border border-white/5 rounded-2xl p-6 md:p-8 hover:border-white/10 transition-colors flex flex-col items-center text-center overflow-hidden"
+          class="bg-[#090C1C] border border-white/5 rounded-2xl p-6 md:p-8 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-blue-500/50 hover:shadow-[0_18px_45px_rgba(37,99,235,0.16)] flex flex-col items-center text-center overflow-hidden motion-reduce:transform-none motion-reduce:transition-none"
           :class="{
             'md:col-span-2 lg:col-span-2': feature.id === 'climate-extremes',
           }"

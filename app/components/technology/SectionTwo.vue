@@ -34,7 +34,7 @@ function isAssetUrl(value: string) {
       </div>
 
       <div
-        class="box-border flex flex-col lg:flex-row justify-between items-center px-6 py-8 md:px-10 md:py-10 lg:px-[40px] lg:py-[24px] gap-8 lg:gap-[107px] bg-white/5 border border-[#055ABA] shadow-[0px_0px_100px_24px_rgba(5,90,186,0.32)] rounded-[24px] flex-none order-0 self-stretch grow-0"
+        class="box-border flex flex-col lg:flex-row justify-between items-center px-8 py-8 md:px-14 md:py-10 lg:px-[72px] lg:py-[24px] gap-8 lg:gap-[107px] bg-white/5 border border-[#055ABA] shadow-[0px_0px_100px_24px_rgba(5,90,186,0.32)] rounded-[24px] flex-none order-0 self-stretch grow-0"
       >
         <div class="space-y-4 md:space-y-6 z-10 w-full lg:w-[450px] text-center lg:text-left">
           <h3 class="text-2xl md:text-3xl lg:text-4xl font-semibold text-white leading-tight">

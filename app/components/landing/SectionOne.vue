@@ -9,7 +9,7 @@ defineProps<Props>()
 </script>
 
 <template>
-  <section class="relative w-full min-h-screen overflow-hidden flex flex-col justify-center items-center text-center text-white bg-bg-primary px-6 md:px-12 lg:px-[120px]">
+  <section class="relative w-full min-h-[680px] overflow-hidden flex flex-col justify-start md:min-h-screen md:justify-center items-center text-center text-white bg-bg-primary px-6 pt-8 md:px-12 md:pt-0 lg:px-[120px]">
     <div class="absolute inset-0 z-0">
       <div class="w-full h-full bg-bg-primary relative overflow-hidden">
         <video
@@ -18,7 +18,7 @@ defineProps<Props>()
           loop
           muted
           playsinline
-          class="absolute inset-x-0 top-[28vh] h-full w-full object-cover object-top opacity-50"
+          class="absolute inset-x-0 top-[30vh] h-[42vh] w-full object-cover object-top opacity-50 md:top-[28vh] md:h-full"
         >
           <source :src="content.backgroundVideo" type="video/mp4">
         </video>
@@ -31,7 +31,7 @@ defineProps<Props>()
       <div class="absolute -bottom-1/4 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[500px] bg-blue-600/30 rounded-full blur-[120px] pointer-events-none" />
     </div>
 
-    <div class="relative z-10 max-w-[1440px] w-full mx-auto flex flex-col items-center mt-16 md:mt-20">
+    <div class="relative z-10 max-w-[1440px] w-full mx-auto flex flex-col items-center mt-0 md:mt-20">
       <div class="flex flex-col items-center gap-4 md:gap-6 p-0 mb-10 md:mb-12">
         <h1 class="w-full max-w-[914px] font-medium text-4xl md:text-6xl lg:text-[72px] leading-tight lg:leading-[88px] tracking-[-0.8px] text-center text-white whitespace-pre-line">
           {{ content.title }}

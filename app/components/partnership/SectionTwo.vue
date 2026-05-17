@@ -30,7 +30,7 @@ function isAssetUrl(value: string) {
         <div
           v-for="(benefit, index) in content.items"
           :key="index"
-          class="p-6 md:p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-blue-500/50 transition-all duration-300 group"
+          class="p-6 md:p-8 rounded-2xl border border-white/10 bg-white/5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-blue-500/50 hover:shadow-[0_18px_45px_rgba(37,99,235,0.16)] group motion-reduce:transform-none motion-reduce:transition-none"
         >
           <div
             class="mb-6"
