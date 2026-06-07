@@ -53,6 +53,7 @@ const toast = useToast()
 const schema = computed(() => props.sectionKey ? getSectionSchema(props.sectionKey) : null)
 const fields = ref<EditorFieldState[]>([])
 const initializing = ref(false)
+const lastEmittedModelValueJson = ref('')
 
 function generateId(): string {
   return Math.random().toString(36).slice(2, 11)
@@ -184,6 +185,7 @@ function emitChange() {
     nextValue[field.key] = fieldToJson(field)
   }
 
+  lastEmittedModelValueJson.value = JSON.stringify(nextValue)
   emit('update:modelValue', nextValue)
 }
 
@@ -287,8 +289,19 @@ function removeMedia(field: EditorFieldState) {
 }
 
 watch(
-  () => [props.sectionKey, JSON.stringify(props.modelValue || {})],
-  async () => {
+  () => ({
+    sectionKey: props.sectionKey,
+    modelValueJson: JSON.stringify(props.modelValue || {}),
+  }),
+  async (nextValue, previousValue) => {
+    if (
+      previousValue
+      && nextValue.sectionKey === previousValue.sectionKey
+      && nextValue.modelValueJson === lastEmittedModelValueJson.value
+    ) {
+      return
+    }
+
     await initializeFields()
   },
   { immediate: true },
