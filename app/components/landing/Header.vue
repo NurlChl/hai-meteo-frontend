@@ -26,8 +26,8 @@ function closeMobileMenu() {
             v-for="item in defaultLandingHeaderNavigation"
             :key="item.name"
             :to="item.href"
-            class="relative font-['Inter'] font-normal text-[13px] leading-[26px] flex items-center tracking-[-0.0001em] text-white/60 hover:text-white transition-colors p-[14px]"
-            :class="{ 'text-white': isActive(item.href) }"
+            class="relative font-['Inter'] font-normal text-[13px] leading-[26px] flex items-center tracking-[-0.0001em] text-white/60 hover:text-white transition-colors rounded-full px-[14px] py-2"
+            :class="{ 'bg-white/10 text-white ring-1 ring-white/15 shadow-[0_0_24px_rgba(56,189,248,0.12)]': isActive(item.href) }"
           >
             {{ item.name }}
           </NuxtLink>

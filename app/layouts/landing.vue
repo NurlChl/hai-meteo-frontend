@@ -5,8 +5,10 @@ import Header from '~/components/landing/Header.vue'
 
 <template>
   <div class="min-h-screen bg-bg-primary text-text-primary flex flex-col font-sans">
-    <div class="relative z-50 w-full">
-      <Header />
+    <div class="relative w-full">
+      <div class="sticky top-0 z-50 w-full">
+        <Header />
+      </div>
       <slot />
     </div>
 

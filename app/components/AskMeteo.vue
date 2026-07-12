@@ -265,7 +265,7 @@ onMounted(() => {
 <style scoped>
 .ask-meteo-widget {
   position: fixed;
-  bottom: 28px;
+  bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 96px));
   right: 28px;
   z-index: 9999;
   font-family: 'Inter', sans-serif;
@@ -759,7 +759,7 @@ onMounted(() => {
 
 @media (max-width: 440px) {
   .ask-meteo-widget {
-    bottom: 16px;
+    bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 96px));
     right: 16px;
     left: 16px;
   }

@@ -136,74 +136,76 @@ watchDebounced(searchQuery, (query) => {
     </div>
 
     <div class="overflow-hidden border border-white/10 rounded-2xl bg-white/5 backdrop-blur-md shadow-card">
-      <table class="min-w-full divide-y divide-white/10">
-        <thead class="bg-white/5">
-          <tr>
-            <th
-              v-for="column in columns"
-              :key="column.key"
-              class="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary transition-colors select-none"
-              @click="handleSort(column.key)"
-            >
-              <div class="flex items-center gap-1">
-                {{ column.label }}
-                <svg
-                  v-if="sortKey === column.key"
-                  class="h-4 w-4"
-                  :class="{ 'rotate-180': sortOrder === 'desc' }"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </th>
-            <th
-              v-if="$slots.rowActions"
-              class="px-6 py-4 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider"
-            >
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-white/10">
-          <tr v-for="item in data" :key="getItemKey(item)" class="hover:bg-white/5 transition-colors duration-200">
-            <td v-for="column in columns" :key="column.key" class="px-6 py-5 whitespace-nowrap text-sm text-text-primary font-medium">
-              <slot
-                v-if="$slots[`cell-${column.key}`]"
-                :name="`cell-${column.key}`"
-                :item="item"
-                :value="getItemValue(item, column.key)"
+      <div class="max-w-full overflow-x-auto">
+        <table class="min-w-full divide-y divide-white/10">
+          <thead class="bg-white/5">
+            <tr>
+              <th
+                v-for="column in columns"
+                :key="column.key"
+                class="px-6 py-4 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer hover:text-text-primary transition-colors select-none"
+                @click="handleSort(column.key)"
               >
-                {{ getItemValue(item, column.key) }}
-              </slot>
-              <template v-else>
-                {{ getItemValue(item, column.key) }}
-              </template>
-            </td>
-            <td
-              v-if="$slots.rowActions"
-              class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-            >
-              <slot name="rowActions" :item="item" />
-            </td>
-          </tr>
-          <tr v-if="data.length === 0">
-            <td
-              :colspan="columns.length + ($slots.rowActions ? 1 : 0)"
-              class="px-6 py-12 text-center text-text-muted"
-            >
-              No data available
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                <div class="flex items-center gap-1">
+                  {{ column.label }}
+                  <svg
+                    v-if="sortKey === column.key"
+                    class="h-4 w-4"
+                    :class="{ 'rotate-180': sortOrder === 'desc' }"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </th>
+              <th
+                v-if="$slots.rowActions"
+                class="px-6 py-4 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider"
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/10">
+            <tr v-for="item in data" :key="getItemKey(item)" class="hover:bg-white/5 transition-colors duration-200">
+              <td v-for="column in columns" :key="column.key" class="px-6 py-5 whitespace-nowrap text-sm text-text-primary font-medium">
+                <slot
+                  v-if="$slots[`cell-${column.key}`]"
+                  :name="`cell-${column.key}`"
+                  :item="item"
+                  :value="getItemValue(item, column.key)"
+                >
+                  {{ getItemValue(item, column.key) }}
+                </slot>
+                <template v-else>
+                  {{ getItemValue(item, column.key) }}
+                </template>
+              </td>
+              <td
+                v-if="$slots.rowActions"
+                class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+              >
+                <slot name="rowActions" :item="item" />
+              </td>
+            </tr>
+            <tr v-if="data.length === 0">
+              <td
+                :colspan="columns.length + ($slots.rowActions ? 1 : 0)"
+                class="px-6 py-12 text-center text-text-muted"
+              >
+                No data available
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div v-if="showPagination" class="flex items-center justify-between">
