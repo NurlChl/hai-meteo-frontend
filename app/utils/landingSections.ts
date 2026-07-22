@@ -191,8 +191,10 @@ export async function buildLandingSections({
       ...defaults.sectionSix,
       title: coerceText(sectionSix?.title, defaults.sectionSix.title),
       description: coerceText(sectionSix?.description, defaults.sectionSix.description),
-      faqs: defaults.sectionSix.faqs.map((fallback, index) =>
-        resolveFaq(Array.isArray(sectionSix?.faqs) ? sectionSix.faqs[index] : null, fallback)),
+      faqs: Array.isArray(sectionSix?.faqs)
+        ? sectionSix.faqs.map((faq, index) =>
+            resolveFaq(faq, defaults.sectionSix.faqs[index] || { question: '', answer: '' }))
+        : defaults.sectionSix.faqs,
     },
     sectionSeven: {
       ...defaults.sectionSeven,
