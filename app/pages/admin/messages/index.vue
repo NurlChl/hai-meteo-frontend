@@ -25,6 +25,7 @@ interface Message {
   id: number
   name: string
   email: string
+  phone?: string
   subject: string
   status: string
   createdAt: string
@@ -186,6 +187,14 @@ onMounted(() => {
           </p>
           <p class="text-text-primary">
             {{ selectedMessage.company }}
+          </p>
+        </div>
+        <div v-if="selectedMessage.phone">
+          <p class="text-sm font-medium text-text-secondary">
+            Phone Number
+          </p>
+          <p class="text-text-primary">
+            {{ selectedMessage.phone }}
           </p>
         </div>
         <div v-if="selectedMessage.subject">

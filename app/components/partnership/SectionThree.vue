@@ -57,6 +57,7 @@ async function submitForm() {
     await post('/contact-messages', {
       name: form.value.name,
       email: form.value.email,
+      phone: form.value.phone,
       company: form.value.companyName,
       subject: form.value.website
         ? `Partnership Inquiry - ${form.value.website}`
